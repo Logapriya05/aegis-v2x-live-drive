@@ -389,6 +389,18 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
 .kv .wide dd{white-space:normal;font-size:11.5px;line-height:1.35}
 .istats{grid-template-columns:repeat(3,minmax(0,1fr))}
 .lv.v2xtrust{background:var(--warn-soft);color:#ffcf85;box-shadow:inset 0 0 0 1px rgba(255,182,72,.35)}
+
+/* ---- one-line panel headers on every screen ---- */
+.ph{flex-wrap:nowrap;min-height:52px}
+.ph h2{flex:none}
+.ph p{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph .r{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;min-width:0;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.ph .r::-webkit-scrollbar{display:none}
+.ph .r .btn{flex:none}
+.ph .r.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.ph .r.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px);mask-image:linear-gradient(90deg,transparent,#000 28px)}
+.ph .r.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+@media (max-width:1100px){.ph p{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
 
 </style>
@@ -2188,10 +2200,33 @@ function setTouchMode(on){if(docEl.classList.contains('touchmode')!==on)docEl.cl
 setTouchMode(matchMedia('(pointer:coarse)').matches&&!matchMedia('(hover:hover)').matches);
 addEventListener('pointerdown',e=>{if(e.pointerType==='touch')setTouchMode(true)},{capture:true,passive:true});
 addEventListener('keydown',e=>{if(!e.repeat&&e.key&&e.key.length<12)setTouchMode(false)},{capture:true});
+
+/* Fit the live view to the screen on every device: the 3D view height is computed from the real viewport so that
+   (stacked) both views, or (side by side) the views plus their status strips, fit on the first screen.
+   On touch devices a height-only change (mobile URL bar showing/hiding while scrolling) is ignored to avoid
+   resizing the canvases while the person scrolls. */
+let fitW=0,fitH=0;
+function fitViews(force){const W=innerWidth,H=innerHeight;const touch=docEl.classList.contains('touchmode');
+  if(!force&&touch&&W===fitW&&Math.abs(H-fitH)<160)return;fitW=W;fitH=H;
+  const phys=document.querySelector('.phys'),twin=document.querySelector('.twin');const showP=phys.offsetParent!==null,showT=twin.offsetParent!==null;
+  const cols=getComputedStyle(document.querySelector('main.grid')).gridTemplateColumns.split(' ').length;const stacked=cols===1&&showP&&showT;
+  const first=showP?physEl:twinEl;const top=first.getBoundingClientRect().top+scrollY;
+  const hOf=e=>e&&e.offsetParent!==null?e.offsetHeight:0;const syncP=hOf(phys.querySelector('.sync')),syncT=hOf(twin.querySelector('.sync'));
+  const gap=parseFloat(getComputedStyle(document.querySelector('main.grid')).rowGap)||10;
+  let extra,n;if(stacked){n=2;extra=syncP+gap+hOf(twin.querySelector('.ph'))+syncT+8}else{n=1;extra=Math.max(showP?syncP:0,showT?syncT:0)+10}
+  const small=W<760||H<520;const minH=small?170:stacked?230:300,maxH=W>=1800?960:720;
+  const v=Math.round(clamp((H-top-extra)/n,minH,maxH));document.body.style.setProperty('--vh',v+'px');if(physEl.clientWidth&&physEl.clientWidth<760)$('keys').classList.add('min')}
+addEventListener('resize',()=>fitViews(false));addEventListener('orientationchange',()=>setTimeout(()=>fitViews(true),250));
+new ResizeObserver(()=>fitViews(true)).observe(document.querySelector('.glance'));
+// toolbars stay on one line; overflowing ones scroll sideways (also with a vertical mouse wheel) and fade at the edge
+for(const r of document.querySelectorAll('.ph .r')){const upd=()=>{r.classList.toggle('more-r',r.scrollLeft+r.clientWidth<r.scrollWidth-2);r.classList.toggle('more-l',r.scrollLeft>2)};
+  r.addEventListener('scroll',upd,{passive:true});new ResizeObserver(upd).observe(r);
+  r.addEventListener('wheel',e=>{if(r.scrollWidth>r.clientWidth&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){r.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});upd()}
+
 const portraitMQ=matchMedia('(max-width:1000px) and (orientation:portrait)');let vmode='split';
 function setView(v){vmode=v;document.body.classList.remove('v-split','v-phys','v-twin');document.body.classList.add('v-'+v);
   document.querySelectorAll('.vswitch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)));
-  const host=v==='twin'&&portraitMQ.matches?twinEl:physEl,tc=document.querySelector('.touch');if(tc&&tc.parentElement!==host)host.appendChild(tc);resize()}
+  const host=v==='twin'&&portraitMQ.matches?twinEl:physEl,tc=document.querySelector('.touch');if(tc&&tc.parentElement!==host)host.appendChild(tc);fitViews(true);resize()}
 document.querySelectorAll('.vswitch button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.v)));
 portraitMQ.addEventListener?portraitMQ.addEventListener('change',()=>setView(vmode)):portraitMQ.addListener(()=>setView(vmode));setView('split');
 // Pixel ratio is fixed for the session (no runtime down-scaling: changing it re-allocates and clears the canvas).
@@ -2226,5 +2261,6 @@ requestAnimationFrame(frame);
 })();
 
 </script>
+
 </body>
 </html>
