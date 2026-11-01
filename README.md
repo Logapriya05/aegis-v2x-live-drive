@@ -28,6 +28,8 @@ It is a single self-contained page (`index.html`) with no build step and no back
 
 On phones and tablets, on-screen GAS / BRK / ◀ ▶ buttons appear. A Split / Road / Twin switcher appears in portrait mode.
 
+Live: https://logapriya05.github.io/aegis-v2x-live-drive/
+
 ## What is shown
 
 - **Physical layer:** the simulated world, including traffic, pedestrians, signals and the Hindustan University district.
@@ -51,4 +53,8 @@ On phones and tablets, on-screen GAS / BRK / ◀ ▶ buttons appear. A Split / R
 
 ## Team
 
-Vaishnavi (Research Lead), Haridharani (Simulation & Scenarios), Logapriya (Software Engineering), Khushi (Edge AI & Deployment).
+| Team Member   | Designation                              |
+| ------------- | ---------------------------------------- |
+| Vaishnavi S   | Research & AI/ML Architecture Lead       |
+| Logapriya S   | Software Engineering Lead                |
+| Haridharani S | Scenario, Fault Injection & Edge AI Lead |
