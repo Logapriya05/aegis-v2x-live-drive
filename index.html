@@ -210,6 +210,15 @@ html.touchmode .start .kb{display:none}html.touchmode .start .tc{display:block}
 .sparkrow small{font-size:11.5px;color:var(--text-3)}
 .spark{display:block;width:100%;height:44px;margin-top:4px}
 .ovcol{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
+.ttnow{margin-top:12px}.ttnow b{font-size:15px}.ttnow b em{font-style:normal;font-size:11px;color:var(--text-3);margin-left:4px}
+.ttcols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:12px var(--pad) 12px}.ttcols h4{margin:0 0 8px;font-size:12px;font-weight:500;color:var(--text-3)}
+.ttb{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 44px;align-items:center;gap:8px;font-size:12px;margin:5px 0}.ttb span{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttb i{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden}.ttb i u{display:block;height:100%;border-radius:3px}.ttb b{font-family:var(--f-mono);font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+table.ttpol th,table.ttpol td{text-align:center;padding:8px 6px;font-size:12px}table.ttpol td{font-family:var(--f-mono);white-space:nowrap}table.ttpol td small{display:block;font-family:var(--f-ui,inherit);font-size:10.5px;color:var(--text-3)}
+table.ttpol td.cur{background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(76,141,255,.5);color:#d6e5ff}
+button.ttreset{margin-left:auto;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-2);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer}button.ttreset:hover{color:var(--text)}
+.stats.ttacc{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:560px){.ttcols{grid-template-columns:minmax(0,1fr)}.stats.ttacc{grid-template-columns:repeat(2,minmax(0,1fr))}table.ttpol th,table.ttpol td{padding:7px 3px;font-size:11px;white-space:normal}table.ttpol td{font-size:10.5px;line-height:1.25}table.ttpol td small{display:none}}
 .group{background:transparent;padding:0}
 .tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 13px 10px;min-width:0;box-shadow:var(--sh-1);transition:border-color .2s var(--ease),transform .2s var(--ease)}
@@ -508,6 +517,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
       <button type="button" role="tab" id="t-safety" aria-selected="false" data-tab="safety"><svg class="ic" aria-hidden="true"><use href="#i-lanes"/></svg>Safety monitor</button>
       <button type="button" role="tab" id="t-v2x" aria-selected="false" data-tab="v2x"><svg class="ic" aria-hidden="true"><use href="#i-radio"/></svg>V2X communication</button>
       <button type="button" role="tab" id="t-twin" aria-selected="false" data-tab="twin"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg>Digital twin</button>
+      <button type="button" role="tab" id="t-ttap" aria-selected="false" data-tab="ttap"><svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg>TwinTrust-AP</button>
       <button type="button" role="tab" id="t-life" aria-selected="false" data-tab="life"><svg class="ic" aria-hidden="true"><use href="#i-route"/></svg>Vehicle life log</button>
       <button type="button" role="tab" id="t-faults" aria-selected="false" data-tab="faults"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>Fault injection</button>
     </div>
@@ -519,12 +529,12 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
           <div class="aggsw" role="group" aria-label="Trust Score subject"><button type="button" data-mode="ego" aria-pressed="true">Ego vehicle</button><button type="button" data-mode="selected" aria-pressed="false">Selected vehicle</button></div>
           <div class="gaugewrap"><canvas id="gauge" aria-label="Trust score gauge"></canvas></div>
           <dl class="kv">
-            <div><dt>Subject</dt><dd id="tVer">—</dd></div>
+            <div><dt>Twin trust T</dt><dd id="tVer">—</dd></div>
             <div class="wide"><dt>Main factor</dt><dd id="tMin">—</dd></div>
-            <div><dt>Sim time</dt><dd id="tAge">—</dd></div>
+            <div><dt>Driving safety</dt><dd id="tAge">—</dd></div>
           </dl>
           <div class="sparkrow"><small>Last 60 s</small><canvas id="spTrust" class="spark"></canvas></div>
-          <p class="fine"><b>How safe the vehicle is right now.</b> Five hazards are each scored from 0 (none) to 1 (extreme) and combined together: <b>collision risk</b> from time-to-collision with a vehicle or pedestrian in the path, a <b>pedestrian</b> on the road ahead compared with the stopping distance, a <b>red light</b> that needs hard braking, <b>close following</b> (time gap under 1.5 s) and <b>lane status</b> (YELLOW / RED). <b>Trust Score = 5 + 95 × (1 − r₁)(1 − r₂)…(1 − r₅)</b>, so several moderate hazards lower it more than one alone, extreme danger without contact bottoms out at about 5, and a vehicle standing still with nothing around it scores 100. Only a confirmed <b>collision</b> takes it to 0; it then recovers over about 10 s. Labels: Safe ≥ 75 · Caution 50–75 · Danger 25–50 · Critical danger below 25. <b>Selected vehicle</b> applies the same rule to a clicked vehicle (collision risk with the ego and its lane status). Demonstration heuristic, separate from the GDCA research formula.</p>
+          <p class="fine"><b>How much the vehicle can trust its situation right now.</b> Six hazards are each scored from 0 (none) to 1 (extreme) and combined: <b>collision risk</b> from time-to-collision, a <b>pedestrian</b> ahead within stopping distance, a <b>red light</b> that needs hard braking, <b>close following</b> (gap under 1.5 s), <b>lane status</b> (YELLOW / RED) and <b>low twin trust</b>. The last one comes from the calibrated Digital Twin trust T of TwinTrust-AP: none while T ≥ 0.6, rising to 0.6 as T falls to 0, so a doubtful twin alone gives at most Danger, never Critical. <b>Trust Score = 5 + 95 × (1 − r₁)(1 − r₂)…(1 − r₆)</b>, so several moderate hazards lower it more than one alone. Only a confirmed <b>collision</b> gives 0; it then recovers over about 10 s. <b>Driving safety</b> is the same score without the twin term. Labels: Safe ≥ 75 · Caution 50–75 · Danger 25–50 · Critical below 25. <b>Selected vehicle</b> uses collision risk with the ego, its lane status and the trust of its own twin entry.</p>
         </article>
         <div class="ovcol">
           <article class="card">
@@ -593,6 +603,29 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
           <p class="body">The twin uses a right-handed ground frame. <b style="color:#ff6b7d">X</b> points east and <b style="color:#5dff9c">Y</b> points north (up on the mini-map). The rulers along the road you are on show the coordinate along that road in metres, with ticks every 5 m and labels every 20 m. Lane markings use the same 3.5 m lane width as the road view.</p>
           <p class="body">Every object in the twin is placed from a received V2X message, or from the ego's LiDAR when the source has no radio or has been isolated. Buildings, roads and signals are the static map, generated from the same layout as the road view.</p>
         </article>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-ttap" role="tabpanel" hidden>
+      <div class="two">
+        <article class="card">
+          <header><h3><svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg>TwinTrust-AP decision loop</h3><span class="sub">Runs 10 times per simulated second</span><span class="tag" id="ttMode">—</span></header>
+          <div class="aggsw" role="group" aria-label="Control policy"><button type="button" data-pol="twintrust" aria-pressed="true">TwinTrust-AP</button><button type="button" data-pol="fixed" aria-pressed="false">Fixed policy (baseline)</button></div>
+          <div class="stats ttnow" id="ttNow"></div>
+          <div class="ttcols"><div><h4>Twin trust evidence</h4><div id="ttEv"></div></div><div><h4>Criticality features</h4><div id="ttCf"></div></div></div>
+          <p class="fine"><b>What happens every cycle.</b> The ego compares each digital-twin object with where its own LiDAR sees it. That gives the evidence for the <b>Calibrated Twin Trust Estimator</b>: prediction error e, error spread u, information age a and link quality q. <b>T = σ(a·raw + b)</b>, with raw = 0.20q − 0.35e − 0.25u − 0.20a. <b>Criticality C</b> is the weighted sum of the five features on the right, and <b>GDCA authority A</b> = exp(−½z²) from each object's residuals against their robust spread. <b>TAHS</b> turns T, C and A into a prediction horizon H, and the <b>FSDP</b> table picks one action for the current (trust, criticality) state. Formulas are Vaishnavi's Python code, ported exactly (12,000 test cases match). The twin error uses the simulator, which a real vehicle would only see through its own sensors.</p>
+        </article>
+        <div class="ovcol">
+          <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg>FSDP policy table</h3><span class="sub">Trust bin × criticality bin → action</span></header>
+            <div class="tablewrap"><table class="ttpol" id="ttPol"></table></div>
+            <p class="fine" id="ttPolNote"></p></article>
+          <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Resource use</h3><span class="sub" id="ttAccSub">since the last mode switch</span><button type="button" class="ttreset" id="ttReset">Reset</button></header>
+            <div class="stats ttacc" id="ttAcc"></div>
+            <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded runs (8 conditions × 150 s) TwinTrust-AP had a lower J in every condition, mostly by synchronising far less, but its twin was correct less often (46% vs 57%). So the gain reflects the objective's weights; see research/README.md.</p></article>
+          <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Trust calibration</h3><span class="sub">Platt scaling, held-out cycles</span></header>
+            <div class="stats" id="ttCal"></div>
+            <p class="fine">Calibrated means T matches how often the twin is really right. Target: a twin object is within 1 m of where LiDAR sees it on the next cycle. Fitted on recorded cycles from this simulated city, not from CARLA.</p></article>
+        </div>
       </div>
     </div>
 
@@ -1434,7 +1467,7 @@ function truePos(e){if(e.kind==='V2V'||e.kind==='V2P')return{x:e.x,z:e.z,vx:e.vx
 function v2xStep(){
   for(const e of allEntities()){if(t<e.nextTx)continue;e.nextTx=t+PERIOD[e.kind]*(e.kind==='V2V'?rnd(.95,1.05):1);
     const tp=truePos(e);const d=Math.hypot(tp.x-ego.x,tp.z-ego.z);if(d>RANGE[e.kind])continue;
-    const pLoss=.01+Math.pow(d/RANGE[e.kind],3)*.25+(fault.loss?.6:0);if(Math.random()<pLoss){lossLog.push(t);delivNote(e.id,false);continue}
+    let pLoss=.01+Math.pow(d/RANGE[e.kind],3)*.25+(fault.loss?.6:0);if((e.kind==='V2V'||e.kind==='V2P')&&losBlocked(ego.x,ego.z,tp.x,tp.z))pLoss+=t<ttap.relayUntil?.06:.30;if(Math.random()<pLoss){lossLog.push(t);delivNote(e.id,false);continue}
     const lat=(6+d*.04+Math.random()*5+(fault.lat?280+Math.random()*80:0))/1000;const sig=e.kind==='V2V'?.4:e.kind==='V2P'?2.0:.05;
     let cx=tp.x+gauss()*sig,cz=tp.z+gauss()*sig;
     if(e.malicious){const H=headingOf(e);cx+=H[0]*11-H[1]*3.5;cz+=H[1]*11+H[0]*3.5}
@@ -1443,7 +1476,7 @@ function v2xStep(){
     if(e.kind==='V2E'){e.mu=clamp(e.mu+gauss()*.004,.55,.92);e.temp+=gauss()*.03;msg.mu=e.mu*(1-.32*wx.wet-.45*wx.snow);msg.temp=e.temp-14*wx.snow}
     if(e.kind==='V2V'){msg.type=e.type;msg.h=e.h;msg.col=e.paint.color.getHex();msg.ind=e.turn?'turn':e.lc?'lane':''}
     queue.push(msg)}
-  for(let i=queue.length-1;i>=0;i--){const m=queue[i];if(m.at<=t){queue.splice(i,1);deliver(m)}}}
+  for(let i=queue.length-1;i>=0;i--){const m=queue[i];if(m.at<=t){queue.splice(i,1);m.sync?deliverSync(m):deliver(m)}}}
 function deliver(m){const r=rec(m),e=m.ent;delivNote(m.id,true);rxLog.push({t,lat:m.lat});life.rx++;sess.rx++;
   const wasLinked=t-r.lastRecv<2;r.lastRecv=t;r.lat=r.lat?r.lat*.8+m.lat*.2:m.lat;
   if(!wasLinked&&(m.kind==='V2V'||m.kind==='V2I')&&r.firstLink&&throttle('link'+m.kind,3)){r.firstLink=false;
@@ -1475,7 +1508,7 @@ function sensorStep(){const Ld=lidar();const objs=[...vehicles.filter(n=>!n.conn
     twin.set(o.id,{id:o.id,kind:o.kind,src:'lidar',x:o.x+gauss()*Ld.sigma,z:o.z+gauss()*Ld.sigma,vx:o.vx||0,vz:o.vz||0,h:o.h,tGen:t,tRecv:t,type:o.type,ent:o,claim:r&&r.isolated&&prev?prev.claim:null})}
   for(const [id,tw] of twin)if(t-tw.tRecv>2.5)twin.delete(id)}
 // dead reckoning: constant speed and turn rate (yaw rate from consecutive messages) instead of a straight line
-function twinPos(tw){const a=Math.min(1.2,t-tw.tGen),sp=Math.hypot(tw.vx,tw.vz);if(tw.kind==='V2V'&&tw.h!==undefined&&sp>.5&&tw.w){const hm=tw.h+tw.w*a/2;return{x:tw.x-Math.sin(hm)*sp*a,z:tw.z-Math.cos(hm)*sp*a}}return{x:tw.x+tw.vx*a,z:tw.z+tw.vz*a}}
+function twinPos(tw){const a=Math.min(typeof ttap!=='undefined'?(ttap.predictOn?horizonS():.2):1.2,t-tw.tGen),sp=Math.hypot(tw.vx,tw.vz);if(tw.kind==='V2V'&&tw.h!==undefined&&sp>.5&&tw.w){const hm=tw.h+tw.w*a/2;return{x:tw.x-Math.sin(hm)*sp*a,z:tw.z-Math.cos(hm)*sp*a}}return{x:tw.x+tw.vx*a,z:tw.z+tw.vz*a}}
 // map matching: a trusted vehicle that is clearly inside one lane is pulled onto that lane's centreline
 const LANES_OFF=[-5.25,-1.75,1.75,5.25];
 function mapMatch(p,h){if(inBoxXZ(p.x,p.z))return p;const F=[-Math.sin(h),-Math.cos(h)];if(Math.abs(F[1])>.985&&Math.abs(near(p.x))<7.5){const c=Math.round(p.x/B)*B,o=p.x-c;const l=LANES_OFF.reduce((a,b)=>Math.abs(b-o)<Math.abs(a-o)?b:a);if(Math.abs(l-o)<.9)p.x=c+l}
@@ -1696,7 +1729,7 @@ function renderTiles(){const m=metrics;
   setTile('mSync',`${(m.sync*100).toFixed(1)}<em>%</em>`,lvlCol(m.sync,.75,.45),`${m.rate.toFixed(1)} Hz · err ${m.err.toFixed(2)} m`);
   setTile('mLinks',`${m.links}`,'#e8eef8',`V2V ${m.byKind.V2V} · V2I ${m.byKind.V2I} · V2P ${m.byKind.V2P} · V2E ${m.byKind.V2E}`);
   setTile('mLat',`${Math.round(m.lat)}<em>ms</em>`,lvlCol(m.lat,40,120,true),'mean one-way, last 1 s');
-  {const H=trustAgg.state==='ok'?tahs(trustAgg.value,crit.risk):null;setTile('mTahs',H?`${H}<em>int.</em>`:'—',H?'#d9e7f6':'#8497b2',H?`T ${trustAgg.value.toFixed(2)} · C ${crit.risk.toFixed(2)} · demo β=γ=6`:'needs a trust value')}
+  {const H=ttap.H,ok=ttap.T!=null;setTile('mTahs',ok?`${H}<em>steps</em>`:'—',ok?'#d9e7f6':'#8497b2',ok?`${(H*.1).toFixed(1)} s · T ${ttap.T.toFixed(2)} · C ${(ttap.C??0).toFixed(2)}`:'starting')}
   setTile('mPps',`${m.pps}`,'#d9e7f6',`PDR ${(m.pdr*100).toFixed(1)}% · ${lossLog.length} lost/s`);
   $('syRate').textContent=`${m.rate.toFixed(1)} Hz`;$('syAge').textContent=`${Math.round(m.age)} ms`;$('syErr').textContent=`${m.err.toFixed(2)} m`;const sc=$('syConf');sc.textContent=`${(m.sync*100).toFixed(1)}%`;sc.style.color=lvlCol(m.sync,.75,.45);
   const tag=$('twinTag');const delayed=m.age>200;tag.textContent=`${delayed?'Delayed':m.sync>.75?'In sync':m.sync>.45?'Degraded':'Out of sync'} · ${twin.size} objects · lag ${Math.round(m.age)} ms`;tag.style.color=delayed?'#ffb648':lvlCol(m.sync,.75,.45)}
@@ -1781,19 +1814,215 @@ function renderGlance(){const a=scoreView(true);
   const m=metrics,delayed=m.age>200;setKpi('kSync',delayed?'warn':m.sync>.75?'ok':m.sync>.45?'warn':'bad',`${(m.sync*100).toFixed(0)}%`,`${delayed?'Delayed':m.sync>.75?'In sync':m.sync>.45?'Degraded':'Out of sync'} · lag ${Math.round(m.age)} ms`);
   setKpi('kLink','info',`${m.links}`,`${Math.round(m.lat)} ms latency · ${m.pps} pkt/s`)}
 function renderTrustCard(){const st=$('trustState'),A=scoreView();$('trustSubj').textContent=A.id||'—';
-  if(A.state==='ok'){const v=A.value;st.textContent=(paused?'Paused · ':'')+A.label;st.style.color=v<.5?'#ff5b6e':v<.75?'#ffb648':'#45e38f';$('tVer').textContent=A.id;$('tMin').textContent=(scoreMode==='selected'&&!A.sel?'No vehicle selected, showing EGO-01 · ':'')+A.main;$('tAge').textContent=`t ${A.t.toFixed(1)} s`}
-  else{st.textContent=paused?'Paused':'No data';st.style.color='#8497b2';$('tVer').textContent=A.id||'—';$('tMin').textContent=A.reason;$('tAge').textContent='—'}
+  if(A.state==='ok'){const v=A.value;st.textContent=(paused?'Paused · ':'')+A.label;st.style.color=v<.5?'#ff5b6e':v<.75?'#ffb648':'#45e38f';$('tVer').textContent=A.twinT==null?(A.sel?'no twin entry':'starting…'):A.twinT.toFixed(2);$('tMin').textContent=(scoreMode==='selected'&&!A.sel?'No vehicle selected, showing EGO-01 · ':'')+A.main;$('tAge').textContent=A.safety==null?'—':`${Math.round(A.safety)}%`}
+  else{st.textContent=paused?'Paused':'No data';st.style.color='#8497b2';$('tVer').textContent='—';$('tMin').textContent=A.reason;$('tAge').textContent='—'}
   const ag=trustAgg;$('v2xAgg').textContent=ag.state==='ok'?`Weakest ≤40 m · ${Math.round(ag.value*100)}%`:'No data'}
 
 
-/* ================= TRUST SCORE (demonstration heuristic) =================
-   A safety score from 0 to 100, recalculated 10 times per simulated second. NOT the GDCA formula and not a
-   calibrated trust model; it is built only from safety metrics the simulation already computes.
+/* ================= TwinTrust-AP core (exact JavaScript port) =================
+   Source of truth: Vaishnavi's Python implementation, branch feature/vaishnavi-ai-architect-ml-designer
+   of the Aegis-V2X repository (copied into research/aegis_ai/ of this repository):
+     ai/trust_estimator/model.py   compute_trust_from_evidence      T = sigmoid((w4*q - w1*e - w2*u - w3*a) / tau)
+     ai/criticality/model.py       compute_criticality_from_evidence C = sum(alpha_i * f_i), sum(alpha_i) = 1
+     ai/twintrust_ap/gdca.py       robust_spread, compute_authority_from_dimensional_evidence  A = exp(-0.5 z^2)
+     ai/twintrust_ap/tahs.py       TAHS.select_horizon              H = Hmin + (Hmax-Hmin)*sigmoid(beta*T - gamma*C + delta*A)
+   Every function below is checked against outputs of the Python originals (research/tests/test_parity.cjs).
+   Calibration (Platt scaling of T) and the FSDP policy table are added on top, not by editing these functions. */
+const TT = (() => {
+  const TRUST_W = [0.35, 0.25, 0.20, 0.20];          // configs/model.yaml trust_estimator.feature_weights (w1..w4)
+  const TRUST_TAU = 0.8;                              // configs/model.yaml trust_estimator.calibration_temperature
+  const CRIT_W = [0.25, 0.25, 0.15, 0.20, 0.15];      // configs/model.yaml criticality_estimator.feature_weights
+  const EPS = 1e-9, MAD_TO_SIGMA = 1.4826;            // gdca.py _EPS, _MAD_TO_SIGMA
+  const fin = x => typeof x === 'number' && Number.isFinite(x);
+  const need = (x, n) => { if (!fin(x)) throw new Error(`${n} must be a finite number, got ${x}`) };
+  const needSeq = (s, n) => { if (!Array.isArray(s) || !s.every(fin)) throw new Error(`${n} must be a sequence of finite numbers`) };
+
+  // ai/trust_estimator/model.py: compute_trust_from_evidence (uncalibrated, exactly as written)
+  function trustFromEvidence(e, u, a, q) {
+    need(e, 'prediction_error'); need(q, 'comm_quality'); need(a, 'sync_age_penalty'); need(u, 'prediction_uncertainty');
+    const [w1, w2, w3, w4] = TRUST_W;
+    const raw = w4 * q - w1 * e - w2 * u - w3 * a;
+    const T = 1 / (1 + Math.exp(-raw / TRUST_TAU));
+    if (!(T >= 0 && T <= 1)) throw new Error('trust outside [0,1]');
+    return T;
+  }
+  const trustRawScore = (e, u, a, q) => TRUST_W[3] * q - TRUST_W[0] * e - TRUST_W[1] * u - TRUST_W[2] * a;
+
+  // ai/criticality/model.py: compute_criticality_from_evidence
+  function criticalityFromEvidence(relSpeed, blockage, syncAge, chanDeg, density) {
+    const f = [relSpeed, blockage, syncAge, chanDeg, density];
+    ['relative_speed', 'blockage_probability', 'sync_age', 'channel_degradation', 'traffic_density'].forEach((n, i) => need(f[i], n));
+    return f.reduce((s, v, i) => s + CRIT_W[i] * v, 0);
+  }
+
+  // ai/twintrust_ap/gdca.py
+  function median(values) { const o = [...values].sort((x, y) => x - y), n = o.length, m = n >> 1; return n % 2 ? o[m] : (o[m - 1] + o[m]) / 2 }
+  function robustSpread(recent) {
+    needSeq(recent, 'recent_values'); if (recent.length < 2) throw new Error('residual_level_and_spread requires at least 2 samples');
+    const level = median(recent); return MAD_TO_SIGMA * median(recent.map(v => Math.abs(v - level)));
+  }
+  function authorityFromEvidence(residualNorm, uncertainty) {
+    need(residualNorm, 'residual_norm'); need(uncertainty, 'uncertainty');
+    if (residualNorm < 0 || uncertainty < 0) throw new Error('residual_norm and uncertainty must be >= 0');
+    const z = residualNorm / (uncertainty + EPS); return Math.exp(-0.5 * z * z);
+  }
+  function authorityFromDimensionalEvidence(residuals, spreads) {
+    needSeq(residuals, 'residuals'); needSeq(spreads, 'spreads');
+    if (residuals.length !== spreads.length) throw new Error('residuals and spreads must have the same number of dimensions');
+    if (spreads.some(s => s < 0)) throw new Error("each dimension's spread must be >= 0");
+    const z = residuals.map((r, i) => r / (spreads[i] + EPS));
+    const zc = Math.sqrt(z.reduce((s, v) => s + v * v, 0) / z.length);
+    return authorityFromEvidence(zc, 1.0);
+  }
+
+  // ai/twintrust_ap/tahs.py: TAHS.select_horizon (parameters passed in; defaults = configs/model.yaml)
+  const TAHS_SPEC = { hMin: 1, hMax: 10, beta: 1.0, gamma: 1.0, delta: 1.0, disc: [1, 2, 3, 5, 8, 10] };
+  function selectHorizon(T, C, A = 0, p = TAHS_SPEC) {
+    if (!(T >= 0 && T <= 1)) throw new Error(`trust must be in [0, 1], got ${T}`);
+    if (!(C >= 0 && C <= 1)) throw new Error(`criticality must be in [0, 1], got ${C}`);
+    if (!(A >= 0 && A <= 1)) throw new Error(`authority must be in [0, 1], got ${A}`);
+    const arg = p.beta * T - p.gamma * C + p.delta * A + (p.bias || 0);
+    const hc = p.hMin + (p.hMax - p.hMin) / (1 + Math.exp(-arg));
+    // Python min(disc, key=|h-hc|) returns the FIRST minimum on ties; reduce with strict < does the same
+    return p.disc.reduce((best, h) => Math.abs(h - hc) < Math.abs(best - hc) ? h : best, p.disc[0]);
+  }
+  return { TRUST_W, TRUST_TAU, CRIT_W, TAHS_SPEC, trustFromEvidence, trustRawScore, criticalityFromEvidence, robustSpread, authorityFromEvidence, authorityFromDimensionalEvidence, selectHorizon, median };
+})();
+
+/* ================= TwinTrust-AP live runtime =================
+   Runs Vaishnavi's algorithms (TT, exact port above) on the demo's live data every 0.1 s of simulated time:
+
+     evidence (twin vs ego LiDAR, info age, link quality, traffic, blockage)
+       -> Calibrated Twin Trust T   (her formula + Platt calibration fitted offline, research/pipeline/calibrate_trust.py)
+       -> Criticality C             (her formula)
+       -> GDCA authority A          (her per-dimension robust consistency check)
+       -> TAHS horizon H            (her formula; parameters tuned so the full horizon range is reachable)
+       -> FSDP action               (3x3 policy table generated offline, research/pipeline/generate_fsdp_policy.py)
+       -> the action is executed on the digital twin, and its cost is accounted for in the objective J.
+
+   Every normalisation constant below is a documented design choice for this demo, not a calibrated value. */
+const TTAP_CFG = {
+  E_REF: 3.0,        // m: twin position error that counts as fully wrong (prediction_error = err / E_REF, clipped to 1)
+  AGE_REF: 1.0,      // s: info age that counts as fully stale (sync_age_penalty = age / AGE_REF)
+  LAT_REF: 300,      // ms: latency at which link quality reaches 0
+  RELSPD_REF: 20,    // m/s: closing speed that counts as maximal
+  DENS_REF: 20,      // road users within 50 m that count as maximal traffic density
+  OK_ERR: 1.0,       // m: a twin object is "correct" if within this distance of where LiDAR sees it
+  GDCA_WIN: 10,      // residual window per object for GDCA's robust spread (1 s at 10 Hz)
+  TRUST_BINS: [0.4, 0.6],    // FSDP trust bins:   low < 0.4 <= medium < 0.6 <= high (matches the 5 calibration bands)
+  CRIT_BINS: [1 / 3, 2 / 3], // FSDP criticality bins: equal thirds of [0,1]
+  // TAHS parameters. configs/model.yaml has beta=gamma=delta=1, which only reaches horizons 3..8.
+  // These keep her formula unchanged and make 1..10 reachable with the neutral point (0.5,0.5,0.5) -> H=5.
+  TAHS: { hMin: 1, hMax: 10, beta: 3.0, gamma: 5.0, delta: 2.0, disc: [1, 2, 3, 5, 8, 10] },
+  // Platt calibration T_cal = sigmoid(a*raw + b). Uncalibrated (her formula) is a = 1/tau, b = 0.
+  CAL: { a: 3.303141, b: 0.659757, fitted: true, source: 'Platt scaling, 8000 recorded cycles, tested on 3992 held-out', eceUnc: 0.1288, eceCal: 0.0419 },
+  CAL_UNC: { a: 1 / 0.8, b: 0 }, // her uncalibrated estimator (tau = 0.8), kept for comparison
+  // FSDP policy table [trustBin][critBin] -> action, generated offline by research/pipeline/generate_fsdp_policy.py
+  // from 24000 exploration cycles (lowest mean J over 10 cycles). Differences between actions are small (see research/README.md).
+  POLICY: {"low": {"low": "synchronize", "medium": "beam_switch", "high": "reduce_horizon"}, "medium": {"low": "beam_switch", "medium": "beam_switch", "high": "reduce_horizon"}, "high": {"low": "beam_switch", "medium": "reduce_horizon", "high": "predict"}},
+  POLICY_SRC: {"low/low": "design_prior", "low/medium": "optimised", "low/high": "optimised", "medium/low": "optimised", "medium/medium": "optimised", "medium/high": "optimised", "high/low": "optimised", "high/medium": "optimised", "high/high": "design_prior"},
+  FIXED: { H: 5, syncEvery: 10 }, // fixed-policy baseline: horizon 5, edge sync every 1 s, prediction always on
+  // objective J = 0.25 L + 0.20 E + 0.20 O + 0.20 F - 0.15 R (configs/model.yaml objective_function)
+  J_W: { L: 0.25, E: 0.20, O: 0.20, F: 0.20, R: 0.15 },
+};
+const BINS = ['low', 'medium', 'high'];
+const ttap = { mode: 'twintrust', H: 5, hIdxOff: 0, predictOn: true, relayUntil: -1, cycle: 0, action: 'maintain_state', state: 'medium/low',
+  T: null, Traw: null, Tunc: null, C: null, A: null, ev: null, cf: null, errHist: [], win: new Map(), objT: new Map(),
+  acc: { cycles: 0, sync: 0, cam: 0, pred: 0, beam: 0, beamFail: 0, J: 0, R: 0, L: 0 }, log: [], explore: false };
+const horizonS = () => ttap.H * 0.1;
+
+// line of sight between two points crosses a building block interior (buildings stand > 11 m from every road centreline)
+function losBlocked(x1, z1, x2, z2) { for (let k = 1; k < 10; k++) { const f = k / 10, x = x1 + (x2 - x1) * f, z = z1 + (z2 - z1) * f; if (Math.abs(near(x)) > 11 && Math.abs(near(z)) > 11) return true } return false }
+
+// edge synchronisation: the roadside/edge twin pushes a fresh state of every connected road user within 150 m
+function edgeSync() { let n = 0;
+  for (const e of allEntities()) { if (e.kind !== 'V2V' && e.kind !== 'V2P') continue; const tp = truePos(e); if (Math.hypot(tp.x - ego.x, tp.z - ego.z) > 150) continue;
+    n++; if (Math.random() < .03 + (fault.loss ? .25 : 0)) continue;
+    const lat = (12 + Math.random() * 8 + (fault.lat ? 280 + Math.random() * 80 : 0)) / 1000, sig = .3;
+    queue.push({ id: e.id, kind: e.kind, ent: e, x: tp.x + gauss() * sig, z: tp.z + gauss() * sig, vx: tp.vx, vz: tp.vz, h: e.h, sigma: sig, tGen: t, at: t + lat, lat, sync: true }) }
+  ttap.acc.sync += n; return n }
+// a synchronisation message refreshes the twin entry only; it is not evidence about the sender's own V2X honesty
+function deliverSync(m) { const pv = twin.get(m.id), r = trustDB.get(m.id); if (r && r.isolated) return;
+  twin.set(m.id, Object.assign({}, pv || { id: m.id, kind: m.kind, src: 'v2x', type: m.ent.type, ent: m.ent }, { x: m.x, z: m.z, vx: m.vx, vz: m.vz, h: m.h ?? pv?.h, w: 0, tGen: m.tGen, tRecv: t, src: 'v2x', sync: true })) }
+
+// live evidence for her estimators, from the digital twin vs the ego's own LiDAR
+function ttapEvidence() {
+  const Ld = lidar(), C = TTAP_CFG; let errSum = 0, n = 0, ok = 0, ageSum = 0, an = 0, aList = [], blocked = 0, links = 0, relMax = 0, dens = 0, pred = 0;
+  const evx = Math.sin(ego.psi) * ego.v, evz = -Math.cos(ego.psi) * ego.v;
+  for (const [id, o] of twinObjs) { const tw = twin.get(id); if (!tw || (tw.kind !== 'V2V' && tw.kind !== 'V2P')) continue; const ent = tw.ent; if (!ent) continue;
+    const d = Math.hypot(ent.x - ego.x, ent.z - ego.z); const age = t - tw.tGen; if (tw.src === 'v2x') { ageSum += age; an++; if (age > .15) pred++ }
+    if (tw.src === 'v2x' && tw.kind === 'V2V' && d < RANGE.V2V) { links++; if (losBlocked(ego.x, ego.z, ent.x, ent.z)) blocked++ }
+    if (d < 50) dens++;
+    if (d < 60) { const rx = ent.x - ego.x, rz = ent.z - ego.z, rvx = (ent.vx || 0) - evx, rvz = (ent.vz || 0) - evz; const cl = -(rx * rvx + rz * rvz) / Math.max(1, d); if (cl > relMax) relMax = cl }
+    if (d > Ld.range) continue; // only objects the ego can verify with its own LiDAR give prediction-error evidence
+    const ox = ent.x + gauss() * Ld.sigma, oz = ent.z + gauss() * Ld.sigma, dx = o.x - ox, dz = o.z - oz, err = Math.hypot(dx, dz);
+    errSum += err; n++; if (err < C.OK_ERR) ok++;
+    let w = ttap.win.get(id); if (!w) { w = { x: [], z: [], e: [], t: t }; ttap.win.set(id, w) } w.t = t;
+    if (w.x.length >= 3) { try { aList.push(TT.authorityFromDimensionalEvidence([dx, dz], [TT.robustSpread(w.x), TT.robustSpread(w.z)])) } catch (_) { } }
+    w.x.push(dx); w.z.push(dz); w.e.push(err); if (w.x.length > C.GDCA_WIN) { w.x.shift(); w.z.shift(); w.e.shift() }
+    o._err = err }
+  for (const [id, w] of ttap.win) if (t - w.t > 2) ttap.win.delete(id);
+  const meanErr = n ? errSum / n : null;
+  if (meanErr !== null) { ttap.errHist.push(meanErr); if (ttap.errHist.length > 20) ttap.errHist.shift() }
+  const m = metrics, q = clamp(m.pdr, 0, 1) * clamp(1 - m.lat / C.LAT_REF, 0, 1);
+  const prev = ttap.ev || {};
+  const e = meanErr !== null ? clamp(meanErr / C.E_REF, 0, 1) : (prev.e ?? 0);
+  const u = ttap.errHist.length >= 2 ? clamp(TT.robustSpread(ttap.errHist) / C.E_REF, 0, 1) : (prev.u ?? 0);
+  const a = an ? clamp(ageSum / an / C.AGE_REF, 0, 1) : (prev.a ?? 1);
+  return { e, u, a, q, meanErr, verified: n, correct: n ? ok / n : null, A: aList.length ? TT.median(aList) : null,
+    cf: { rel: clamp(relMax / C.RELSPD_REF, 0, 1), block: links ? blocked / links : 0, age: a, chan: 1 - q, dens: clamp(dens / C.DENS_REF, 0, 1) }, predicted: pred, links };
+}
+const sgm = x => 1 / (1 + Math.exp(-x));
+const calibrate = raw => sgm(TTAP_CFG.CAL.a * raw + TTAP_CFG.CAL.b);
+const binOf = (v, th) => v < th[0] ? 0 : v < th[1] ? 1 : 2;
+
+function ttapAction(Tb, Cb) {
+  if (ttap.explore) { const acts = ['synchronize', 'predict', 'beam_switch', 'reduce_horizon', 'increase_horizon', 'maintain_state']; return acts[Math.floor(Math.random() * acts.length)] }
+  const P = TTAP_CFG.POLICY; return P ? P[BINS[Tb]][BINS[Cb]] : 'maintain_state' }
+
+// one TwinTrust-AP cycle (10 Hz)
+function ttapStep() {
+  const ev = ttapEvidence(); ttap.ev = ev; ttap.cycle++;
+  ttap.Tunc = TT.trustFromEvidence(ev.e, ev.u, ev.a, ev.q);            // her formula, uncalibrated
+  ttap.Traw = TT.trustRawScore(ev.e, ev.u, ev.a, ev.q);
+  ttap.T = calibrate(ttap.Traw);                                      // calibrated twin trust
+  ttap.C = clamp(TT.criticalityFromEvidence(ev.cf.rel, ev.cf.block, ev.cf.age, ev.cf.chan, ev.cf.dens), 0, 1);
+  ttap.A = ev.A ?? 0;                                                 // no verifiable object -> authority 0 (her signature default)
+  const A = ttap.acc; let syncN = 0, beam = 0, beamFail = 0;
+  if (ttap.mode === 'fixed') {
+    ttap.H = TTAP_CFG.FIXED.H; ttap.predictOn = true; ttap.action = ttap.cycle % TTAP_CFG.FIXED.syncEvery === 0 ? 'synchronize' : 'predict'; ttap.state = 'fixed';
+    if (ttap.action === 'synchronize') syncN = edgeSync();
+  } else {
+    const Tb = binOf(ttap.T, TTAP_CFG.TRUST_BINS), Cb = binOf(ttap.C, TTAP_CFG.CRIT_BINS); ttap.state = `${BINS[Tb]}/${BINS[Cb]}`;
+    const act = ttapAction(Tb, Cb); ttap.action = act;
+    const disc = TTAP_CFG.TAHS.disc; const base = disc.indexOf(TT.selectHorizon(ttap.T, ttap.C, ttap.A, TTAP_CFG.TAHS));
+    if (act === 'reduce_horizon') ttap.hIdxOff = Math.max(-2, ttap.hIdxOff - 1); else if (act === 'increase_horizon') ttap.hIdxOff = Math.min(2, ttap.hIdxOff + 1);
+    ttap.H = disc[clamp(base + ttap.hIdxOff, 0, disc.length - 1)];
+    if (act === 'synchronize') syncN = edgeSync();
+    if (act === 'predict' || act === 'reduce_horizon' || act === 'increase_horizon') ttap.predictOn = true;
+    else if (act === 'synchronize' || act === 'beam_switch') ttap.predictOn = false;
+    if (act === 'beam_switch') { beam = 1; if (ev.cf.block < .05) beamFail = 1; else ttap.relayUntil = t + 2 } // switching with no blocked link achieves nothing
+  }
+  // cost accounting for J (per cycle, each term normalised to ~[0,1])
+  const nObj = Math.max(1, ev.links + 1), predN = ttap.predictOn ? ev.predicted : 0;
+  const L = clamp(ev.a, 0, 1), E = clamp((syncN + .05 * predN * ttap.H + 2 * beam) / (nObj * 1.5), 0, 1), O = clamp(syncN / nObj, 0, 1), F = beamFail, Rl = ev.correct ?? 1;
+  const W = TTAP_CFG.J_W, J = W.L * L + W.E * E + W.O * O + W.F * F - W.R * Rl;
+  A.cycles++; A.sync += 0; A.pred += predN; A.beam += beam; A.beamFail += beamFail; A.J += J; A.R += Rl; A.L += L;
+  ttap.last = { t, state: ttap.state, action: ttap.action, H: ttap.H, T: ttap.T, Tunc: ttap.Tunc, C: ttap.C, A: ttap.A, e: ev.e, u: ev.u, a: ev.a, q: ev.q, cf: ev.cf, correct: ev.correct, meanErr: ev.meanErr, J, L, E, O, F, R: Rl, syncN };
+  if (window.__ttapRecord) window.__ttapRecord.push(ttap.last);
+}
+function ttapReset() { Object.assign(ttap.acc, { cycles: 0, sync: 0, cam: 0, pred: 0, beam: 0, beamFail: 0, J: 0, R: 0, L: 0 }) }
+
+/* ================= TRUST SCORE =================
+   A score from 0 to 100, recalculated 10 times per simulated second. It combines the ego's driving hazards with
+   the calibrated Digital Twin trust T of the Calibrated Twin Trust Estimator (TwinTrust-AP, above):
+       r_twin = 0.6 · clamp((0.6 − T) / 0.6, 0, 1)     (0.6 = FSDP high-trust bin; a reliable twin costs nothing)
+   r_twin is one more factor (1 − r_twin) in S below. The pure driving part is also kept (e.safety) and shown.
 
    Every hazard i gives a risk r_i in [0, 1]. They are combined together, so several moderate hazards lower the
    score more than one alone:
 
-       S = (1 − r_coll)(1 − r_ped)(1 − r_signal)(1 − r_headway)(1 − r_lane)      (0 = no margin left, 1 = no hazard)
+       S = (1 − r_coll)(1 − r_ped)(1 − r_signal)(1 − r_headway)(1 − r_lane)(1 − r_twin)   (0 = no margin, 1 = no hazard)
        Trust Score = 5 + 95·S                     while there is no collision   (range 5 … 100)
        Trust Score = (5 + 95·S)·(1 − r_event)     after a confirmed collision   (exactly 0 at contact)
 
@@ -1811,7 +2040,7 @@ function renderTrustCard(){const st=$('trustState'),A=scoreView();$('trustSubj')
      r_lane    lane monitor: GREEN 0, YELLOW 0.35, RED 0.70.
      r_event   1 for 2 s after a confirmed contact, then fades to 0 over 8 s.
    Speed factor clamp(|v|/5, 0, 1) (pedestrian: |v|/3): a vehicle standing still with nothing around it scores 100.
-   Other vehicles: S = (1 − c(TTC vs ego))(1 − r_lane), same 5 + 95·S rule and collision handling. Scored for
+   Other vehicles: S = (1 − c(TTC vs ego))(1 − r_lane)(1 − r_twin of that object's twin entry), same 5 + 95·S rule and collision handling. Scored for
    every simulated vehicle, so a selected vehicle never loses its score by driving away.
    Smoothing: falls with τ = 0.25 s (instantly when the score would go below 25 or on contact), recovers with τ = 3 s.
    Alerts: LOW TRUST below 50, cleared at ≥ 55. */
@@ -1836,37 +2065,77 @@ function updateTrustScores(dt){
   const lane=SAF.get('EGO-01')?.lane||['NA',''];const pr=Number.isFinite(pred.ttc)?critFromTtc(pred.ttc):0;const hw=headwayRisk(crit.gap,ego.v);const pd=pedRisk();
   const ev=ego.collT>=0?eventRisk(ego.collT):0;const ttcBest=Math.min(crit.ttc,pred.ttc),ttcId=crit.ttc<=pred.ttc?crit.obj?.id:pred.id;
   const comps={coll:Math.max(crit.ttcRisk,pr),ped:pd.r,signal:crit.sigRisk,headway:hw.r,lane:LANE_RISK[lane[0]],event:ev};
-  const S=combine([comps.coll,comps.ped,comps.signal,comps.headway,comps.lane]);const raw=scoreOf(S,ev);
-  const e=smoothScore('EGO-01',raw,ev>=1,dt);e.comps=comps;e.S=S;e.ttc=ttcBest;e.thw=hw.thw;e.kind='ego';
+  const Tw=ttap.cycle>=10?ttap.T:null;comps.twin=twinRisk(Tw);const Ss=combine([comps.coll,comps.ped,comps.signal,comps.headway,comps.lane]);const S=Ss*(1-comps.twin);const safety=scoreOf(Ss,ev);const raw=scoreOf(S,ev);
+  const e=smoothScore('EGO-01',raw,ev>=1,dt);e.comps=comps;e.S=S;e.twinT=Tw;e.safety=safety;e.ttc=ttcBest;e.thw=hw.thw;e.kind='ego';
   e.main=ev>0?`Collision with ${lastColl.id||'object'}${ev<1?' · recovering':''}`:factorText([
     {r:comps.coll,txt:`Collision risk · TTC ${Number.isFinite(ttcBest)?ttcBest.toFixed(1):'—'} s · ${ttcId||'object'}`},
     {r:comps.ped,txt:`Pedestrian ${pd.p?.id||''} ahead · ${Math.round(pd.gap)} m`},
     {r:comps.signal,txt:`Red light · needs ${crit.need.toFixed(1)} m/s² to stop`},
     {r:comps.headway,txt:`Close following · ${hw.thw.toFixed(1)} s gap`},
-    {r:comps.lane,txt:`Lane ${lane[0]==='Y'?'YELLOW':'RED'} · ${lane[1]}`}],Math.abs(ego.v)<1?'Standing still · no danger around':'No danger detected');
+    {r:comps.lane,txt:`Lane ${lane[0]==='Y'?'YELLOW':'RED'} · ${lane[1]}`},
+    {r:comps.twin,txt:`Low twin trust T = ${(Tw??0).toFixed(2)}${ttap.ev&&ttap.ev.meanErr!=null?` · twin error ${ttap.ev.meanErr.toFixed(1)} m`:''}`}],Math.abs(ego.v)<1?'Standing still · no danger around':'No danger detected');
   // ---- every simulated vehicle (lane from the safety monitor when present, else evaluated directly)
   const live=new Set();
   for(const n of vehicles){const id=n.id;live.add(id);const sf=SAF.get(id);let ln=sf?sf.lane:null;
     if(!ln){n._lst=n._lst||{};ln=n.turn?['G','Turning at junction']:laneEval(n.x,n.z,n.h,n.wid,!!n.lc,n._lst,dt)}
     const ttc=ttcById.get(id);const ev2=lastColl.id===id?eventRisk(lastColl.t):0;
-    const c2={coll:ttc!==undefined?critFromTtc(ttc):0,lane:LANE_RISK[ln[0]],event:ev2};const S2=combine([c2.coll,c2.lane]);
-    const e2=smoothScore(id,scoreOf(S2,ev2),ev2>=1,dt);e2.comps=c2;e2.S=S2;e2.kind='vehicle';e2.ttc=ttc??Infinity;e2.lane=ln;
-    e2.main=ev2>0?`Collision with ego${ev2<1?' · recovering':''}`:factorText([{r:c2.coll,txt:`Collision risk with ego · TTC ${(ttc??0).toFixed(1)} s`},{r:c2.lane,txt:`Lane ${ln[0]==='Y'?'YELLOW':'RED'} · ${ln[1]}`}],'No danger detected')}
+    const Ti=vehicleTwinTrust(id);const c2={coll:ttc!==undefined?critFromTtc(ttc):0,lane:LANE_RISK[ln[0]],twin:twinRisk(Ti),event:ev2};const S2=combine([c2.coll,c2.lane,c2.twin]);
+    const e2=smoothScore(id,scoreOf(S2,ev2),ev2>=1,dt);e2.twinT=Ti;e2.safety=scoreOf(combine([c2.coll,c2.lane]),ev2);e2.comps=c2;e2.S=S2;e2.kind='vehicle';e2.ttc=ttc??Infinity;e2.lane=ln;
+    e2.main=ev2>0?`Collision with ego${ev2<1?' · recovering':''}`:factorText([{r:c2.coll,txt:`Collision risk with ego · TTC ${(ttc??0).toFixed(1)} s`},{r:c2.lane,txt:`Lane ${ln[0]==='Y'?'YELLOW':'RED'} · ${ln[1]}`},{r:c2.twin,txt:`Low twin trust T = ${(Ti??0).toFixed(2)}`}],'No danger detected')}
   for(const id of TS.keys())if(id!=='EGO-01'&&!live.has(id))TS.delete(id);
   // ---- alerts on threshold transitions (ego, and the selected vehicle)
   for(const id of['EGO-01',selId]){const x=id&&TS.get(id);if(!x)continue;
     if(x.value<50&&!x.low){x.low=true;raiseAlert('lowtrust',id,`Trust Score ${Math.round(x.value)}% (below 50%) · ${x.main}`)}
     else if(x.low&&x.value>=55){x.low=false;logEvent('ok',`Trust Score recovered · ${id}`,`${Math.round(x.value)}%`);pushAlertItem('ok',id,`Trust Score back to ${Math.round(x.value)}%`)}}}
+// twin hazard from the calibrated twin trust T: none at or above the FSDP high-trust bin (0.6), 0.6 when T = 0
+// (so low twin trust alone gives at least 43 = Danger, never Critical; ignored during the first second, before any evidence)
+const TWIN_RISK_MAX=.6;function twinRisk(T){return T==null?0:TWIN_RISK_MAX*clamp((TTAP_CFG.TRUST_BINS[1]-T)/TTAP_CFG.TRUST_BINS[1],0,1)}
 const safetyLabel=v=>v<=.005?'Collision':v<.25?'Critical danger':v<.5?'Danger':v<.75?'Caution':'Safe';
+// twin trust of one vehicle's representation: the same calibrated formula on that object's own evidence
+function vehicleTwinTrust(id){const tw=twin.get(id),o=twinObjs.get(id);if(!tw||!o)return null;const C=TTAP_CFG;const w=ttap.win.get(id);
+  const e=o._err!=null&&w?clamp(o._err/C.E_REF,0,1):clamp((t-tw.tGen)*Math.hypot(tw.vx||0,tw.vz||0)/C.E_REF,0,1);
+  const u=w&&w.e.length>=2?clamp(TT.robustSpread(w.e)/C.E_REF,0,1):.5,a=clamp((t-tw.tGen)/C.AGE_REF,0,1);
+  const d=deliv.get(id),r=trustDB.get(id);const q=tw.src==='lidar'?1:clamp(d?d.pdr:0,0,1)*clamp(1-((r&&r.lat)||0)*1000/C.LAT_REF,0,1);
+  return calibrate(TT.trustRawScore(e,u,a,q))}
 function scoreView(forceEgo){let id=!forceEgo&&scoreMode==='selected'&&selId&&TS.has(selId)?selId:'EGO-01';
   const e=TS.get(id);if(!e)return{state:'ok',value:1,id,t,main:'Starting · no danger detected',label:'Safe'};
-  return{state:'ok',value:clamp(e.value/100,0,1),id,t:e.t,main:e.main,raw:e.raw,comps:e.comps,label:safetyLabel(e.value/100),sel:id!=='EGO-01'}}
+  return{state:'ok',value:clamp(e.value/100,0,1),id,t:e.t,main:e.main,raw:e.raw,comps:e.comps,label:safetyLabel(e.value/100),sel:id!=='EGO-01',twinT:e.twinT,safety:e.safety}}
 function setScoreMode(m){scoreMode=m;document.querySelectorAll('.aggsw button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.mode===m)));renderTrustCard();renderGlance()}
 
 /* ---------- dashboard tabs ---------- */
 let curTab='overview';
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{curTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
-  document.querySelectorAll('.tabpanel').forEach(p=>{p.hidden=p.id!=='tab-'+curTab});sampleHist();renderLife()}));
+  document.querySelectorAll('.tabpanel').forEach(p=>{p.hidden=p.id!=='tab-'+curTab});sampleHist();renderLife();renderTTAP()}));
+
+
+/* ---------- TwinTrust-AP tab ---------- */
+const ACT_LABEL={synchronize:'Synchronize',predict:'Predict',beam_switch:'Beam switch',reduce_horizon:'Reduce horizon',increase_horizon:'Increase horizon',maintain_state:'Maintain state'};
+const ttBar=(lbl,v,col)=>`<div class="ttb"><span>${lbl}</span><i><u style="width:${Math.round(clamp(v??0,0,1)*100)}%;background:${col}"></u></i><b>${v==null?'—':v.toFixed(2)}</b></div>`;
+function setPolicy(m){if(ttap.mode===m)return;ttap.mode=m;ttap.hIdxOff=0;ttapReset();ttap.accT0=t;
+  document.querySelectorAll('[data-pol]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pol===m)));
+  logEvent('info',m==='fixed'?'Fixed policy (baseline) active':'TwinTrust-AP active',m==='fixed'?'horizon 5, edge sync every 1 s':'calibrated trust + FSDP table');renderTTAP(true)}
+document.querySelectorAll('[data-pol]').forEach(b=>b.addEventListener('click',()=>setPolicy(b.dataset.pol)));
+$('ttReset').addEventListener('click',()=>{ttapReset();ttap.accT0=t;renderTTAP(true)});
+function renderTTAP(force){if(curTab!=='ttap'&&!force)return;const L=ttap.last;const fx=ttap.mode==='fixed';
+  const tg=$('ttMode');tg.textContent=fx?'Fixed policy':'TwinTrust-AP';tg.style.color=fx?'#ffb648':'#45e38f';
+  if(!L){$('ttNow').innerHTML='<div><small>Status</small><b>starting…</b></div>';return}
+  const tc=v=>v==null?'#8497b2':v>=.6?'#45e38f':v>=.4?'#ffb648':'#ff5b6e',cc=v=>v>=2/3?'#ff5b6e':v>=1/3?'#ffb648':'#45e38f';
+  $('ttNow').innerHTML=`<div><small>Twin trust T (calibrated)</small><b style="color:${tc(L.T)}">${L.T.toFixed(2)}</b></div><div><small>T uncalibrated</small><b>${L.Tunc.toFixed(2)}</b></div>
+   <div><small>Criticality C</small><b style="color:${cc(L.C)}">${L.C.toFixed(2)}</b></div><div><small>GDCA authority A</small><b>${L.A.toFixed(2)}</b></div>
+   <div><small>Horizon H (TAHS)</small><b>${L.H}<em>${(L.H*.1).toFixed(1)} s</em></b></div><div><small>FSDP state</small><b>${fx?'—':L.state}</b></div>
+   <div><small>Action</small><b>${ACT_LABEL[L.action]||L.action}</b></div><div><small>Twin objects correct</small><b>${L.correct==null?'none in LiDAR range':Math.round(L.correct*100)+'%'}</b></div>`;
+  $('ttEv').innerHTML=ttBar('Prediction error e',L.e,'#ff7a8a')+ttBar('Error spread u',L.u,'#ff9f6b')+ttBar('Information age a',L.a,'#ffb648')+ttBar('Link quality q',L.q,'#45e38f')+`<div class="ttb"><span>Twin error</span><i></i><b>${L.meanErr==null?'—':L.meanErr.toFixed(1)+'m'}</b></div>`;
+  const f=L.cf;$('ttCf').innerHTML=ttBar('Closing speed',f.rel,'#ff7a8a')+ttBar('Blocked links',f.block,'#c48bff')+ttBar('Info age',f.age,'#ffb648')+ttBar('Channel loss',f.chan,'#6ab0ff')+ttBar('Traffic density',f.dens,'#8fd3c7');
+  const P=TTAP_CFG.POLICY,src=TTAP_CFG.POLICY_SRC||{};let tb='<thead><tr><th>Trust ＼ Criticality</th><th>Low</th><th>Medium</th><th>High</th></tr></thead><tbody>';
+  for(const T of['high','medium','low']){tb+=`<tr><th>${T[0].toUpperCase()+T.slice(1)}</th>`;for(const C of BINS){const k=`${T}/${C}`;tb+=`<td class="${!fx&&L.state===k?'cur':''}">${P?ACT_LABEL[P[T][C]]:'—'}<small>${src[k]==='optimised'?'from data':'design rule'}</small></td>`}tb+='</tr>'}
+  $('ttPol').innerHTML=tb+'</tbody>';
+  $('ttPolNote').textContent=fx?'Fixed policy is active: the table is not used. Horizon 5 and an edge synchronisation every 1 s, whatever the trust and criticality.':'Highlighted: the current state. Bins: trust low < 0.4 ≤ medium < 0.6 ≤ high; criticality in thirds. "From data" cells chose the action with the lowest mean J in recorded exploration runs; the differences between actions are small, so this table is provisional. "Design rule" cells had too little data and use the rule from the algorithm design document.';
+  const A=ttap.acc,n=Math.max(1,A.cycles),sec=A.cycles/10;
+  $('ttAccSub').textContent=`last ${sec.toFixed(0)} s · ${fx?'fixed policy':'TwinTrust-AP'}`;
+  $('ttAcc').innerHTML=`<div><small>Edge syncs / s</small><b>${(A.sync/Math.max(.1,sec)).toFixed(1)}</b></div><div><small>Mean info age</small><b>${(A.L/n*TTAP_CFG.AGE_REF*1000).toFixed(0)} ms</b></div>
+   <div><small>Twin correct</small><b>${(A.R/n*100).toFixed(0)}%</b></div><div><small>Mean J</small><b>${(A.J/n).toFixed(3)}</b></div>
+   <div><small>Beam switches</small><b>${A.beam}</b></div><div><small>Beam failures</small><b>${A.beamFail}</b></div>`;
+  const c=TTAP_CFG.CAL;$('ttCal').innerHTML=`<div><small>ECE before</small><b>${c.eceUnc??'—'}</b></div><div><small>ECE after</small><b style="color:#45e38f">${c.eceCal??'—'}</b></div><div><small>a</small><b>${c.a.toFixed(3)}</b></div><div><small>b</small><b>${c.b.toFixed(3)}</b></div>`}
 
 /* ---------- collision prediction (constant-velocity closest approach on the digital twin) ---------- */
 // Uses the twin's estimated positions/velocities (V2X + LiDAR), i.e. what the vehicle actually knows.
@@ -2244,18 +2513,21 @@ function render(){const a=physEl.clientWidth/Math.max(1,physEl.clientHeight),b=t
   else{camera.layers.set(0);camera.layers.enable(1);camera.layers.enable(2);if(composer)composer.render();else R2.render(tscene,camera)}
   perf.twin=perf.twin*.9+(performance.now()-t0)*.1;camera.layers.set(0);camera.layers.enable(L_PHYS)}
 let paused=false;
+// one simulation step (no drawing); also used to fast-forward recorded runs for calibration and policy generation
+function simStep(dt){t+=dt;skyU.time.value=t;
+  updateChunks(false);updateEgo(dt);updateVehicles(dt);updatePeds(dt);txT+=dt;while(txT>=.1){txT-=.1;life.tx++;sess.tx++}
+  v2xStep();sensT+=dt;if(sensT>=.1){sensT=0;sensorStep();aggregateTrust();predictRisk();checkLowTrust();checkDeviation(.1);updateCriticality();updateSafety(.1);computeMetrics();ttapStep();updateTrustScores(.1)}updateCriticality();updateTwin(dt)}
+function fastForward(sec,hook,dt=.05){const n=Math.round(sec/dt);for(let k=0;k<n;k++){if(hook)hook();simStep(dt)}}
 function frame(now){requestAnimationFrame(frame);gfx.booted=true;const dt=Math.min(.05,(now-last)/1000);last=now;if(dt<=0)return;
   if(paused){processPointer();if(!window.__noRender)render();return}
-  t+=dt;skyU.time.value=t;
-  updateChunks(false);updateEgo(dt);updateVehicles(dt);updatePeds(dt);txT+=dt;while(txT>=.1){txT-=.1;life.tx++;sess.tx++}
-  v2xStep();sensT+=dt;if(sensT>=.1){sensT=0;sensorStep();aggregateTrust();predictRisk();checkLowTrust();checkDeviation(.1);updateCriticality();updateSafety(.1);updateTrustScores(.1)}updateCriticality();updateTwin(dt);updateLinks();updateRsuLinks();updateRuler();updateCamera(dt);updateAtmosphere(dt);updateWeather(dt);updateSelection();processPointer();if(!window.__noRender)render();perf.fr++;{const nw=performance.now();if(!perf.t0)perf.t0=nw;if(nw-perf.t0>1000){perf.fps=perf.fr*1000/(nw-perf.t0);perf.fr=0;perf.t0=nw}}drawMini();drawGauge(dt);updateAudio();
+  simStep(dt);updateLinks();updateRsuLinks();updateRuler();updateCamera(dt);updateAtmosphere(dt);updateWeather(dt);updateSelection();processPointer();if(!window.__noRender)render();perf.fr++;{const nw=performance.now();if(!perf.t0)perf.t0=nw;if(nw-perf.t0>1000){perf.fps=perf.fr*1000/(nw-perf.t0);perf.fr=0;perf.t0=nw}}drawMini();drawGauge(dt);updateAudio();
   densT+=dt;if(densT>1){densT=0;manageDensity()}
-  uiT+=dt;if(uiT>.25){uiT=0;computeMetrics();renderTiles();renderTrust();renderHud();renderTrustCard();renderStatus();renderTwinTab();renderSafety();renderGlance();if(curTab==='overview')renderInspector();$('clock').textContent=new Date().toLocaleTimeString([],{hour12:false});$('sessT').textContent=fmtT((Date.now()-sessStart)/1000)}
+  uiT+=dt;if(uiT>.25){uiT=0;computeMetrics();renderTiles();renderTrust();renderHud();renderTrustCard();renderStatus();renderTwinTab();renderTTAP();renderSafety();renderGlance();if(curTab==='overview')renderInspector();$('clock').textContent=new Date().toLocaleTimeString([],{hour12:false});$('sessT').textContent=fmtT((Date.now()-sessStart)/1000)}
   histT+=dt;if(histT>.5){histT=0;sampleHist();renderLife()}saveT+=dt;if(saveT>2){saveT=0;saveLife()}}
 addEventListener('pagehide',saveLife);
 function togglePause(){paused=!paused;const b=$('pauseBtn');b.textContent=paused?'Resume':'Pause';b.classList.toggle('on',paused);const pt=$('pausedTag');pt.hidden=!paused;pt.textContent=`Paused · sim t ${t.toFixed(1)} s`;
   logEvent('info',paused?'Simulation paused':'Simulation resumed',`sim t ${t.toFixed(2)} s`);renderTrustCard();renderGlance()}
-window.__aegis={get t(){return t},keys,TS,get crit(){return crit},scoreView,setScoreMode,togglePause,get paused(){return paused},gfx,screenPick,R1,R2,get lastColl(){return lastColl},setWeather,updateWeather,wx,ttcById,twin,twinObjs,get selId(){return selId},updateSafety,laneEval,alertsLog:()=>[...document.querySelectorAll('#alertList li')].slice(0,8).map(l=>l.textContent.trim().slice(0,110)),startErratic,SAF,toggleTwinStyle,perf,selectVehicle,raiseAlert,readings:id=>{const n=vehicles.find(v=>v.id===id);return n&&vehicleReadings(n)},lowtrust:()=>[...trustDB.values()].filter(r=>r.low).map(r=>r.id),trustAgg:()=>trustAgg,pred:()=>pred,toggleFault,trustDB,egoG,ego,vehicles,peds,chunks,applyTod,setCam:m=>{camMode=m},districtOf,load:()=>updateChunks(true),
+window.__aegis={ttap,TTAP_CFG,TT,fastForward,simStep,get crit(){return crit},get t(){return t},keys,TS,get crit(){return crit},scoreView,setScoreMode,togglePause,get paused(){return paused},gfx,screenPick,R1,R2,get lastColl(){return lastColl},setWeather,updateWeather,wx,ttcById,twin,twinObjs,get selId(){return selId},updateSafety,laneEval,alertsLog:()=>[...document.querySelectorAll('#alertList li')].slice(0,8).map(l=>l.textContent.trim().slice(0,110)),startErratic,SAF,toggleTwinStyle,perf,selectVehicle,raiseAlert,readings:id=>{const n=vehicles.find(v=>v.id===id);return n&&vehicleReadings(n)},lowtrust:()=>[...trustDB.values()].filter(r=>r.low).map(r=>r.id),trustAgg:()=>trustAgg,pred:()=>pred,toggleFault,trustDB,egoG,ego,vehicles,peds,chunks,applyTod,setCam:m=>{camMode=m},districtOf,load:()=>updateChunks(true),
   go:d=>{for(let r=0;r<6;r++)for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++)if(districtOf(i,j)===d){ego.x=i*B+1.75;ego.z=j*B+B*.75;ego.psi=0;ego.v=0;updateChunks(true);return d+' '+i+','+j}return 'none'}};
 requestAnimationFrame(frame);
 })();

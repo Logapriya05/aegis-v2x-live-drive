@@ -2,7 +2,7 @@
 
 A playable, browser-based demonstration of the **Aegis-V2X** project (B.Tech research project, Hindustan University, targeting IEEE PerCom 2027). You drive an ego vehicle through an endless city. Beside the road view, a live **digital twin** is rebuilt only from V2X messages and LiDAR. The page also shows a **Trust Score**, lane monitoring, collision prediction and V2X communication in real time.
 
-It is a single self-contained page (`index.html`) with no build step and no backend.
+It is a single self-contained page (`index.html`) with no build step and no backend. The `research/` folder holds the algorithm source, the tests and the scripts that produced the calibration and the FSDP table.
 
 ## Run it
 
@@ -34,12 +34,20 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
 
 - **Physical layer:** the simulated world, including traffic, pedestrians, signals and the Hindustan University district.
 - **Digital twin:** the same camera view, but other road users are placed only from received V2X messages (V2V, V2I, V2P, V2E) and the ego's LiDAR, with real latency, packet loss and noise.
-- **Trust Score (0–100):** how safe the vehicle is right now. Five hazards are combined: collision risk (time-to-collision), a pedestrian ahead, a red light needing hard braking, close following, and lane status:
+- **TwinTrust-AP (new tab):** the project's own algorithms run live at 10 Hz, using evidence the demo produces as you drive:
+  - **Calibrated Twin Trust Estimator:** compares each twin object with where the ego's LiDAR sees it, then computes `T = σ(a·raw + b)` with `raw = 0.20q − 0.35e − 0.25u − 0.20a` (e prediction error, u error spread, a information age, q link quality). The Platt parameters a and b were fitted on recorded cycles.
+  - **Criticality C:** the weighted sum of closing speed, blocked links, information age, channel loss and traffic density.
+  - **GDCA authority A = exp(−½z²)**, from per-object residuals against their robust spread.
+  - **TAHS:** sets the prediction horizon H from T, C and A.
+  - **FSDP:** a 3 × 3 table (trust bin × criticality bin) that picks one of six actions: synchronize, predict, beam switch, reduce horizon, increase horizon, maintain state.
+  - **Fixed policy:** a toggle switches to a baseline (horizon 5, edge sync every 1 s) so the resource use can be compared.
+- **Trust Score (0–100):** how much the vehicle can trust its situation right now. Six hazards are combined: collision risk (time-to-collision), a pedestrian ahead, a red light needing hard braking, close following, lane status and **low twin trust**. The twin term is `r_twin = 0.6 × clamp((0.6 − T)/0.6, 0, 1)`, so a reliable twin (T ≥ 0.6) costs nothing:
 
-  `Trust Score = 5 + 95 × (1 − r_coll)(1 − r_ped)(1 − r_signal)(1 − r_headway)(1 − r_lane)`
+  `Trust Score = 5 + 95 × (1 − r_coll)(1 − r_ped)(1 − r_signal)(1 − r_headway)(1 − r_lane)(1 − r_twin)`
 
-  - It is 100 with no danger and about 5 in extreme danger.
+  - It is 100 with no danger, and about 5 in extreme danger.
   - It is 0 only at an actual collision, then recovers over about 10 s.
+  - "Driving safety" in the card is the same score without the twin term.
   - The full definition is in the comment above `updateTrustScores` in `index.html`.
 - **Lane monitor:** GREEN / YELLOW / RED for every vehicle, based on road geometry, position, heading and lane-change state.
 - **V2X message trust:** a per-sender reliability value (checked against LiDAR), shown in the V2X tab.
@@ -47,14 +55,12 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
 ## Limitations (please read before presenting)
 
 - Everything is simulated in the browser. It is not connected to CARLA, SUMO, Sionna RT or the project backend.
-- The Trust Score is a **demonstration heuristic** built on the simulator's own safety metrics. It is not the GDCA research formula and is not calibrated on real data; the weights are design choices.
+- The TwinTrust-AP formulas are Vaishnavi's Python code (copied unchanged into `research/aegis_ai/`), ported to JavaScript and checked case by case (`research/tests/`). The evidence that feeds them, the calibration and the FSDP table come from **this simulated city**, not from CARLA or real vehicles.
+- The FSDP table is provisional: in the recorded runs the differences between actions are small. See `research/README.md` for the numbers, including the comparison with the fixed policy.
+- The weights of the Trust Score's hazard terms and the evidence scales (3 m error, 1 s age, 300 ms latency) are design choices, not fitted values.
 - Weather changes visuals and the reported road friction only. Vehicle dynamics do not change with weather.
 - Collision risk is evaluated only while the ego is moving. Being hit from behind while stationary is not modelled.
 
 ## Team
 
-| Team Member   | Designation                              |
-| ------------- | ---------------------------------------- |
-| Vaishnavi S   | Research & AI/ML Architecture Lead       |
-| Logapriya S   | Software Engineering Lead                |
-| Haridharani S | Scenario, Fault Injection & Edge AI Lead |
+Vaishnavi (Research Lead), Haridharani (Simulation & Scenarios), Logapriya (Software Engineering), Khushi (Edge AI & Deployment).
