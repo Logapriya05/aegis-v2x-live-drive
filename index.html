@@ -621,7 +621,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
             <p class="fine" id="ttPolNote"></p></article>
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Resource use</h3><span class="sub" id="ttAccSub">since the last mode switch</span><button type="button" class="ttreset" id="ttReset">Reset</button></header>
             <div class="stats ttacc" id="ttAcc"></div>
-            <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded runs (8 conditions × 150 s) TwinTrust-AP had a lower J in every condition, mostly by synchronising far less, but its twin was correct less often (46% vs 57%). So the gain reflects the objective's weights; see research/README.md.</p></article>
+            <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded test runs (8 conditions × 150 s) this table kept the twin as accurate as the fixed policy overall (57.5% vs 56.6%) at about the same J. It skips synchronisation where links are good and spends it where they are degraded, so total synchronisation is not lower. Details in research/README.md.</p></article>
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Trust calibration</h3><span class="sub">Platt scaling, held-out cycles</span></header>
             <div class="stats" id="ttCal"></div>
             <p class="fine">Calibrated means T matches how often the twin is really right. Target: a twin object is within 1 m of where LiDAR sees it on the next cycle. Fitted on recorded cycles from this simulated city, not from CARLA.</p></article>
@@ -1917,10 +1917,12 @@ const TTAP_CFG = {
   // Platt calibration T_cal = sigmoid(a*raw + b). Uncalibrated (her formula) is a = 1/tau, b = 0.
   CAL: { a: 3.303141, b: 0.659757, fitted: true, source: 'Platt scaling, 8000 recorded cycles, tested on 3992 held-out', eceUnc: 0.1288, eceCal: 0.0419 },
   CAL_UNC: { a: 1 / 0.8, b: 0 }, // her uncalibrated estimator (tau = 0.8), kept for comparison
-  // FSDP policy table [trustBin][critBin] -> action, generated offline by research/pipeline/generate_fsdp_policy.py
-  // from 24000 exploration cycles (lowest mean J over 10 cycles). Differences between actions are small (see research/README.md).
-  POLICY: {"low": {"low": "synchronize", "medium": "beam_switch", "high": "reduce_horizon"}, "medium": {"low": "beam_switch", "medium": "beam_switch", "high": "reduce_horizon"}, "high": {"low": "beam_switch", "medium": "reduce_horizon", "high": "predict"}},
-  POLICY_SRC: {"low/low": "design_prior", "low/medium": "optimised", "low/high": "optimised", "medium/low": "optimised", "medium/medium": "optimised", "medium/high": "optimised", "high/low": "optimised", "high/medium": "optimised", "high/high": "design_prior"},
+  // FSDP policy table [trustBin][critBin] -> action, chosen by constrained closed-loop selection
+  // (research/pipeline/select_policy.py): lowest J among candidate tables whose twin correctness
+  // is at least the fixed baseline's. No candidate met that in every condition; this one (c9)
+  // came closest and was accepted; the conditions where it misses are reported in research/README.md.
+  POLICY: {"low": {"low": "synchronize", "medium": "synchronize", "high": "synchronize"}, "medium": {"low": "increase_horizon", "medium": "increase_horizon", "high": "increase_horizon"}, "high": {"low": "increase_horizon", "medium": "increase_horizon", "high": "increase_horizon"}},
+  POLICY_SRC: 'c9: synchronize when trust is low, otherwise lengthen the prediction horizon',
   FIXED: { H: 5, syncEvery: 10 }, // fixed-policy baseline: horizon 5, edge sync every 1 s, prediction always on
   // objective J = 0.25 L + 0.20 E + 0.20 O + 0.20 F - 0.15 R (configs/model.yaml objective_function)
   J_W: { L: 0.25, E: 0.20, O: 0.20, F: 0.20, R: 0.15 },
@@ -2126,10 +2128,10 @@ function renderTTAP(force){if(curTab!=='ttap'&&!force)return;const L=ttap.last;c
    <div><small>Action</small><b>${ACT_LABEL[L.action]||L.action}</b></div><div><small>Twin objects correct</small><b>${L.correct==null?'none in LiDAR range':Math.round(L.correct*100)+'%'}</b></div>`;
   $('ttEv').innerHTML=ttBar('Prediction error e',L.e,'#ff7a8a')+ttBar('Error spread u',L.u,'#ff9f6b')+ttBar('Information age a',L.a,'#ffb648')+ttBar('Link quality q',L.q,'#45e38f')+`<div class="ttb"><span>Twin error</span><i></i><b>${L.meanErr==null?'—':L.meanErr.toFixed(1)+'m'}</b></div>`;
   const f=L.cf;$('ttCf').innerHTML=ttBar('Closing speed',f.rel,'#ff7a8a')+ttBar('Blocked links',f.block,'#c48bff')+ttBar('Info age',f.age,'#ffb648')+ttBar('Channel loss',f.chan,'#6ab0ff')+ttBar('Traffic density',f.dens,'#8fd3c7');
-  const P=TTAP_CFG.POLICY,src=TTAP_CFG.POLICY_SRC||{};let tb='<thead><tr><th>Trust ＼ Criticality</th><th>Low</th><th>Medium</th><th>High</th></tr></thead><tbody>';
-  for(const T of['high','medium','low']){tb+=`<tr><th>${T[0].toUpperCase()+T.slice(1)}</th>`;for(const C of BINS){const k=`${T}/${C}`;tb+=`<td class="${!fx&&L.state===k?'cur':''}">${P?ACT_LABEL[P[T][C]]:'—'}<small>${src[k]==='optimised'?'from data':'design rule'}</small></td>`}tb+='</tr>'}
+  const P=TTAP_CFG.POLICY;let tb='<thead><tr><th>Trust ＼ Criticality</th><th>Low</th><th>Medium</th><th>High</th></tr></thead><tbody>';
+  for(const T of['high','medium','low']){tb+=`<tr><th>${T[0].toUpperCase()+T.slice(1)}</th>`;for(const C of BINS){const k=`${T}/${C}`;tb+=`<td class="${!fx&&L.state===k?'cur':''}">${P?ACT_LABEL[P[T][C]]:'—'}</td>`}tb+='</tr>'}
   $('ttPol').innerHTML=tb+'</tbody>';
-  $('ttPolNote').textContent=fx?'Fixed policy is active: the table is not used. Horizon 5 and an edge synchronisation every 1 s, whatever the trust and criticality.':'Highlighted: the current state. Bins: trust low < 0.4 ≤ medium < 0.6 ≤ high; criticality in thirds. "From data" cells chose the action with the lowest mean J in recorded exploration runs; the differences between actions are small, so this table is provisional. "Design rule" cells had too little data and use the rule from the algorithm design document.';
+  $('ttPolNote').textContent=fx?'Fixed policy is active: the table is not used. Horizon 5 and an edge synchronisation every 1 s, whatever the trust and criticality.':'Highlighted: the current state. Bins: trust low < 0.4 ≤ medium < 0.6 ≤ high; criticality in thirds. The table was chosen by running whole candidate tables in this simulation: lowest J among tables whose twin is at least as accurate as the fixed policy\'s. None met that in every condition; this one came closest. In test runs it matched the fixed policy\'s accuracy overall but was less accurate in some conditions, and which ones varied between runs.';
   const A=ttap.acc,n=Math.max(1,A.cycles),sec=A.cycles/10;
   $('ttAccSub').textContent=`last ${sec.toFixed(0)} s · ${fx?'fixed policy':'TwinTrust-AP'}`;
   $('ttAcc').innerHTML=`<div><small>Edge syncs / s</small><b>${(A.sync/Math.max(.1,sec)).toFixed(1)}</b></div><div><small>Mean info age</small><b>${(A.L/n*TTAP_CFG.AGE_REF*1000).toFixed(0)} ms</b></div>

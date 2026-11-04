@@ -21,7 +21,7 @@ This folder connects the live-drive demo to the project's own algorithms. It hol
 | Trust, criticality, GDCA, TAHS formulas | **Unchanged.** Ported exactly. |
 | TAHS parameters | Changed for the demo only: β = 3, γ = 5, δ = 2. `configs/model.yaml` has β = γ = δ = 1, which can only reach horizons 3–8. The new values make 1–10 reachable, and the neutral point (0.5, 0.5, 0.5) still gives H = 5. The formula is unchanged. |
 | Calibration (a, b) | **New.** Fitted here; the original code had no fitted calibration. |
-| FSDP policy table | **New.** Generated here; it was the open Phase 5 blocker in `fsdp.py`. |
+| FSDP policy table | **New.** Chosen here by a constrained closed-loop search; it was the open Phase 5 blocker in `fsdp.py`. |
 | Evidence (e, u, a, q, criticality features) | **New.** Computed live from the demo's twin vs LiDAR. The scales (3 m error, 1 s age, 300 ms latency, 20 m/s, 20 road users) are design choices. |
 
 Everything below comes from the **browser simulation in this repository**, not from CARLA, Sionna RT or real vehicles.
@@ -54,8 +54,11 @@ pip install playwright && playwright install chromium
 python3 pipeline/collect.py explore.jsonl explore results/calibration.json        # random FSDP actions (exploration data)
 SEED_OFF=500009 python3 pipeline/collect.py explore_b.jsonl explore results/calibration.json   # second batch, other seeds
 python3 pipeline/calibrate_trust.py explore.jsonl calibration.json
-python3 pipeline/generate_fsdp_policy.py explore_all.jsonl fsdp_policy.json   # cond names must differ per batch
-python3 pipeline/collect.py eval_tt.jsonl twintrust
+python3 pipeline/generate_fsdp_policy.py explore_all.jsonl fsdp_policy_j_only.json   # J-only table; cond names must differ per batch
+SEED_OFF=777 python3 pipeline/collect.py s_fixed.jsonl fixed - - 90                 # selection seeds
+SEED_OFF=777 python3 pipeline/collect.py s_c9.jsonl twintrust - c9.json 90         # one run per candidate table
+python3 pipeline/select_policy.py s_fixed.jsonl s_c*.jsonl                          # constrained selection
+python3 pipeline/collect.py eval_tt.jsonl twintrust - results/fsdp_policy.json
 python3 pipeline/collect.py eval_fx.jsonl fixed
 python3 pipeline/summarize_eval.py eval_tt.jsonl eval_fx.jsonl eval_summary.json
 ```
@@ -77,44 +80,76 @@ Calibrated T ranges over about 0.22–0.72 on the test data. It does not reach 1
 
 ### 2. FSDP policy table — `results/fsdp_policy.json`
 
-- **Data:** 24,000 cycles with uniformly random actions.
-- **Cost of an action:** the mean J over 10 cycles starting with the action's own cycle. J = 0.25L + 0.20E + 0.20O + 0.20F − 0.15R, from `configs/model.yaml`.
-- **Choice per state:** the action with the lowest cost, if every action has at least 40 samples. Otherwise the cell uses the design rule from the algorithm design document.
+**Objective, decided 2026-11-04:** minimise J = 0.25L + 0.20E + 0.20O + 0.20F − 0.15R (`configs/model.yaml`), but only among tables whose twin correctness R is at least the fixed policy's, overall and in every condition (tolerance 0.01).
 
-| Trust ＼ Criticality | Low | Medium | High |
-|---|---|---|---|
-| **High** | beam_switch (z = 0.88) | reduce_horizon (z = 1.15) | predict *(design rule, no data)* |
-| **Medium** | beam_switch (z = 0.22) | beam_switch (z = 0.88) | reduce_horizon (z = 1.32) |
-| **Low** | synchronize *(design rule, 34 samples)* | beam_switch (z = 0.46) | reduce_horizon (z = 0.13) |
+**Why this objective.** A first table chose actions by J alone (`results/fsdp_policy_j_only.json`, from 24,000 random-action cycles).
 
-z is the gap to the runner-up action in standard errors. **None of the data-chosen cells is statistically separated from its runner-up** (all z < 2), so this table is provisional.
+- It lowered J in every test condition (ΔJ −0.079, 95% CI [−0.096, −0.063]) by almost never synchronising.
+- But its twin was correct less often: 46% vs 57% (`results/eval_summary_j_only.json`).
+- That shows the effect of J's weights, not a better twin, so the accuracy rule was added.
 
-### 3. TwinTrust-AP vs fixed policy — `results/eval_summary.json`
+**How the table was chosen** (`pipeline/select_policy.py`, results in `results/policy_search.json`):
 
-- **Fixed baseline:** horizon 5, an edge synchronisation every 1 s, prediction always on.
-- **Seeds:** the same per condition for both modes. Traffic diverges once actions differ, so these are two runs of the same scenario, not a cycle-by-cycle pairing.
+- Random-action data can't show the rule, because one action's effect on accuracy depends on the actions after it.
+- So whole candidate tables were run in the simulation as policies.
+- Selection used separate seeds (`SEED_OFF=777`, 90 s per condition). The chosen table was then evaluated once on the original evaluation seeds.
+
+| Candidate | Rule | J | Twin correct | Syncs/s |
+|---|---|---:|---:|---:|
+| Fixed policy | horizon 5, sync every 1 s | 0.137 | 0.534 | 45.2 |
+| c0 | J only | 0.046 | 0.464 | 2.2 |
+| c1 | c0 + sync when trust is low | 0.083 | 0.472 | 48.0 |
+| c5 | predict everywhere | 0.065 | 0.468 | 0.0 |
+| c6 | increase horizon everywhere | 0.094 | 0.493 | 0.0 |
+| c7 | sync when trust is low, else predict | 0.105 | 0.500 | 57.0 |
+| c8 | sync when trust is low; else increase horizon if criticality ≥ medium, predict otherwise | 0.137 | 0.527 | 45.8 |
+| **c9** | **sync when trust is low, else increase horizon** | **0.124** | **0.530** | **34.6** |
+| c10 | c9 + sync at medium trust / high criticality | 0.142 | 0.522 | 55.2 |
+
+**No candidate met the rule.** Every one was below the fixed policy in at least one condition.
+
+What made the difference, seen in the runs:
+
+- **Prediction horizon.** Under packet loss and latency, information is 0.6–0.9 s old and trust is low. TAHS then picks short horizons (1–2 steps, 0.1–0.2 s), so the twin cannot bridge the delay. The fixed policy always predicts 0.5 s ahead.
+- **Prediction is switched off.** The table's "synchronize" and "beam switch" actions turn prediction off.
+- **Trust that stays high.** In c9's weak conditions, calibrated trust stays high while the twin gets worse, so the table never asks for a sync. The trust estimator does not detect those degradations.
+
+**Decision (2026-11-04):** use c9, the closest, and report the conditions where it misses the rule.
+
+### 3. c9 vs fixed policy on the evaluation seeds — `results/eval_summary.json`
+
+- **Seeds:** the same per condition for both modes, 150 s per condition. Traffic diverges once actions differ, so these are two runs of the same scenario, not a cycle-by-cycle pairing.
 - **Confidence intervals:** block bootstrap over 10 s blocks.
 
-| Condition | J TwinTrust-AP | J fixed | ΔJ [95% CI] | Twin correct TT / fixed | Edge syncs/s TT / fixed |
+| Condition | J c9 | J fixed | ΔJ [95% CI] | Twin correct c9 / fixed | Syncs/s c9 / fixed |
 |---|---:|---:|---|---:|---:|
-| normal | −0.015 | 0.074 | −0.089 [−0.103, −0.076] | 59% / 63% | 0.0 / 44.1 |
-| normal_fast | −0.014 | 0.066 | −0.079 [−0.091, −0.068] | 56% / 62% | 0.0 / 43.2 |
-| loss | 0.104 | 0.184 | −0.080 [−0.089, −0.072] | 42% / 62% | 0.0 / 49.0 |
-| latency | 0.076 | 0.163 | −0.087 [−0.099, −0.075] | 54% / 73% | 0.0 / 41.0 |
-| lidar_degraded | 0.084 | 0.148 | −0.064 [−0.076, −0.052] | 9% / 9% | 6.7 / 39.1 |
-| spoof | −0.002 | 0.076 | −0.078 [−0.089, −0.068] | 55% / 62% | 0.0 / 44.5 |
-| loss_latency | 0.178 | 0.238 | −0.060 [−0.070, −0.051] | 40% / 66% | 0.0 / 47.6 |
-| slow_dense | −0.019 | 0.078 | −0.097 [−0.108, −0.086] | 55% / 57% | 0.0 / 47.9 |
-| **Overall** | **0.049** | **0.128** | **−0.079 [−0.096, −0.063]** | **46% / 57%** | **0.8 / 44.6** |
+| normal | 0.031 | 0.074 | −0.043 [−0.061, −0.027] | 59% / 63% | 0.0 / 44.1 |
+| normal_fast | 0.001 | 0.066 | −0.064 [−0.081, −0.048] | 70% / 62% | 0.0 / 43.2 |
+| loss | 0.199 | 0.184 | +0.015 [−0.004, 0.030] | 65% / 62% | 31.6 / 49.0 |
+| latency | 0.196 | 0.163 | +0.033 [−0.006, 0.073] | 66% / 73% | 62.8 / 41.0 |
+| lidar_degraded | 0.200 | 0.148 | +0.052 [0.038, 0.067] | 11% / 9% | 102.3 / 39.1 |
+| spoof | 0.020 | 0.076 | −0.056 [−0.067, −0.043] | 60% / 62% | 0.0 / 44.5 |
+| loss_latency | 0.326 | 0.238 | +0.088 [0.076, 0.100] | 65% / 66% | 198.1 / 47.6 |
+| slow_dense | 0.005 | 0.078 | −0.073 [−0.086, −0.062] | 64% / 57% | 0.0 / 47.9 |
+| **Overall** | **0.122** | **0.128** | **−0.006 [−0.030, 0.018]** | **57.5% / 56.6%** | **49.3 / 44.6** |
 
-**How to read this (important):**
+**How to read this:**
 
-- TwinTrust-AP has a lower J in every condition. Almost all of the difference comes from the energy and sync-overhead terms (E 0.057 vs 0.343, O 0.002 vs 0.100), because the learned table almost never synchronises.
-- It pays for this with a **less accurate twin.** Twin correctness is 46% vs 57% overall, and about 41% vs 64% under packet loss.
-- The policy is doing what J asks. With R weighted at 0.15 against 0.20 + 0.20 for energy and overhead, J rates "sync less, accept a worse twin" as better.
-- **A reviewer would rightly say this result shows the effect of the objective's weights, not that trust-driven control keeps the twin more accurate.** Before the result can support the paper's claims, two things are needed:
-  1. **Vaishnavi decides the objective.** Options: re-weight J, add a constraint such as "twin correctness ≥ the fixed policy's", or use a Pareto comparison.
-  2. **Regenerate the table and evaluate again** with the new objective.
-- "Twin correct" uses LiDAR as the reference. Under LiDAR degradation (σ = 2.2 m) the reference itself is too noisy for a 1 m threshold, so that row says little about the twin.
+- **Accuracy:** c9 keeps the twin about as accurate as the fixed policy overall (57.5% vs 56.6%).
+- **Cost:** J is not significantly different overall.
+- **Synchronisation moves rather than shrinks.**
+  - With good links (normal, spoof, slow dense) c9 does not synchronise at all, and has lower J with similar or better accuracy.
+  - With degraded links it synchronises much more, up to 198 per second under loss + latency, and has higher J.
+  - That is the trust-driven behaviour the design intends, but **total** synchronisation is not lower (49 vs 45 per second).
+- **The accuracy rule per condition is still not met.** On these seeds c9 is less accurate under latency (−7 points), in normal driving (−4) and under spoofing (−2).
+- **The weak conditions change with the seeds.** On the selection seeds they were spoofing and slow dense traffic; here they are latency and normal driving. So per-condition differences of a few points are within run-to-run variation at 90–150 s per condition. Longer or repeated runs are needed before reporting any per-condition claim.
+- **Reference noise:** "Twin correct" uses LiDAR as the reference. Under LiDAR degradation (σ = 2.2 m) the reference itself is too noisy for a 1 m threshold, so that row says little about the twin.
+
+**What a fair claim from this simulation would be:** trust-driven control can match the fixed policy's twin accuracy while moving synchronisation to where the link is degraded. It does **not**, in this setup, reduce total resource use under the accuracy rule.
+
+**What would strengthen it:**
+- Trust evidence that reacts to spoofing and dense traffic, for example GDCA authority or V2X consistency.
+- A TAHS horizon that does not shrink when information is stale.
+- Longer, repeated evaluation runs.
 
 Not yet experimentally verified beyond these simulated runs. No CARLA, Sionna RT or hardware results are claimed.

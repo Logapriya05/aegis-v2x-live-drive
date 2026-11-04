@@ -56,7 +56,7 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
 
 - Everything is simulated in the browser. It is not connected to CARLA, SUMO, Sionna RT or the project backend.
 - The TwinTrust-AP formulas are Vaishnavi's Python code (copied unchanged into `research/aegis_ai/`), ported to JavaScript and checked case by case (`research/tests/`). The evidence that feeds them, the calibration and the FSDP table come from **this simulated city**, not from CARLA or real vehicles.
-- The FSDP table is provisional: in the recorded runs the differences between actions are small. See `research/README.md` for the numbers, including the comparison with the fixed policy.
+- The FSDP table was chosen as the lowest-cost table that keeps the twin as accurate as the fixed policy. No candidate met that in every condition; the chosen one matches the fixed policy's accuracy overall (57.5% vs 56.6%) at about the same cost, and moves synchronisation to degraded links rather than reducing it. See `research/README.md`.
 - The weights of the Trust Score's hazard terms and the evidence scales (3 m error, 1 s age, 300 ms latency) are design choices, not fitted values.
 - Weather changes visuals and the reported road friction only. Vehicle dynamics do not change with weather.
 - Collision risk is evaluated only while the ego is moving. Being hit from behind while stationary is not modelled.

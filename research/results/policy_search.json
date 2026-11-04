@@ -1,0 +1,226 @@
+{
+ "fixed": {
+  "J": 0.137413,
+  "R": 0.533883,
+  "sync_per_s": 45.163889,
+  "R_by_condition": {
+   "normal": 0.645595,
+   "normal_fast": 0.441769,
+   "loss": 0.6363,
+   "latency": 0.606049,
+   "lidar_degraded": 0.090363,
+   "spoof": 0.62696,
+   "loss_latency": 0.657199,
+   "slow_dense": 0.566832
+  }
+ },
+ "candidates": {
+  "c0": {
+   "J": 0.045515,
+   "R": 0.464317,
+   "sync_per_s": 2.205556,
+   "worst_condition_R_gap": -0.286432,
+   "feasible": false
+  },
+  "c1": {
+   "J": 0.08324,
+   "R": 0.472479,
+   "sync_per_s": 48.029167,
+   "worst_condition_R_gap": -0.142308,
+   "feasible": false
+  },
+  "c5": {
+   "J": 0.065088,
+   "R": 0.467988,
+   "sync_per_s": 0,
+   "worst_condition_R_gap": -0.203313,
+   "feasible": false
+  },
+  "c6": {
+   "J": 0.094002,
+   "R": 0.493175,
+   "sync_per_s": 0,
+   "worst_condition_R_gap": -0.133705,
+   "feasible": false
+  },
+  "c7": {
+   "J": 0.105096,
+   "R": 0.500403,
+   "sync_per_s": 56.969444,
+   "worst_condition_R_gap": -0.111881,
+   "feasible": false
+  },
+  "c8": {
+   "J": 0.137036,
+   "R": 0.527285,
+   "sync_per_s": 45.804167,
+   "worst_condition_R_gap": -0.072536,
+   "feasible": false
+  },
+  "c9": {
+   "J": 0.124226,
+   "R": 0.529935,
+   "sync_per_s": 34.601389,
+   "worst_condition_R_gap": -0.11054,
+   "feasible": false
+  },
+  "c10": {
+   "J": 0.141509,
+   "R": 0.52208,
+   "sync_per_s": 55.238889,
+   "worst_condition_R_gap": -0.119947,
+   "feasible": false
+  }
+ },
+ "selected": null,
+ "tolerance": 0.01,
+ "tables": {
+  "c0": {
+   "low": {
+    "low": "synchronize",
+    "medium": "beam_switch",
+    "high": "reduce_horizon"
+   },
+   "medium": {
+    "low": "beam_switch",
+    "medium": "beam_switch",
+    "high": "reduce_horizon"
+   },
+   "high": {
+    "low": "beam_switch",
+    "medium": "reduce_horizon",
+    "high": "predict"
+   }
+  },
+  "c1": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "beam_switch",
+    "medium": "beam_switch",
+    "high": "reduce_horizon"
+   },
+   "high": {
+    "low": "beam_switch",
+    "medium": "reduce_horizon",
+    "high": "predict"
+   }
+  },
+  "c5": {
+   "low": {
+    "low": "predict",
+    "medium": "predict",
+    "high": "predict"
+   },
+   "medium": {
+    "low": "predict",
+    "medium": "predict",
+    "high": "predict"
+   },
+   "high": {
+    "low": "predict",
+    "medium": "predict",
+    "high": "predict"
+   }
+  },
+  "c6": {
+   "low": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   },
+   "medium": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   },
+   "high": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   }
+  },
+  "c7": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "predict",
+    "medium": "predict",
+    "high": "predict"
+   },
+   "high": {
+    "low": "predict",
+    "medium": "predict",
+    "high": "predict"
+   }
+  },
+  "c8": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "predict",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   },
+   "high": {
+    "low": "predict",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   }
+  },
+  "c9": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   },
+   "high": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   }
+  },
+  "c10": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "synchronize"
+   },
+   "high": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   }
+  }
+ },
+ "descriptions": {
+  "c0": "J-only table (fsdp_policy_j_only.json)",
+  "c1": "c0 + synchronize in all low-trust states",
+  "c5": "predict everywhere",
+  "c6": "increase_horizon everywhere",
+  "c7": "synchronize if trust low, else predict",
+  "c8": "synchronize if trust low; else increase_horizon if criticality >= medium, predict otherwise",
+  "c9": "synchronize if trust low, else increase_horizon",
+  "c10": "c9 + synchronize in medium-trust/high-criticality"
+ },
+ "notes": "Selection seeds: SEED_OFF=777, 90 s per condition. c2 was stopped before finishing and c3, c4 were never run (both only added synchronisation states, which c1 had already shown does not bring accuracy near the fixed policy), so they are not reported. No candidate was feasible; c9 was accepted as the closest (decision 2026-11-04)."
+}
