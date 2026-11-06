@@ -314,7 +314,7 @@ Simulation only. Not yet experimentally verified on CARLA, Sionna RT or hardware
 - **Memory:** peak traced Python allocation of 8.5 KiB over 1,000 cycles.
 - **Scope:** decision logic only. It excludes perception and the digital-twin update, and it was not measured on a Jetson Orin (future work). Re-run it on the target machine before quoting it for that machine.
 
-### 8. Final configuration: 3GPP mmWave channel + GRU twin predictor (2026-11-06) — `results/eval_final.json`
+### 8. 3GPP mmWave channel + GRU twin predictor (2026-11-06, superseded by section 10) — `results/eval_final.json`
 
 Three changes, then the whole pipeline (calibration, selection, repeated runs) was run again. **These are the numbers to report; sections 5–6 are superseded.**
 
@@ -407,7 +407,7 @@ Three changes, then the whole pipeline (calibration, selection, repeated runs) w
 
 Simulation only. 3GPP channel models, not a ray-traced (Sionna RT) or measured channel. Not yet experimentally verified beyond these runs.
 
-### 9. Across 6G candidate bands: 15, 30 and 100 GHz — `results/eval_band_15ghz.json`, `results/eval_band_100ghz.json`
+### 9. Across 6G candidate bands, before section 10 (superseded) — `results/eval_band_15ghz.json`, `results/eval_band_100ghz.json`
 
 Same evaluation as section 8 (same 3 seed sets, 8 conditions × 150 s) with the 3GPP V2V channel at 15 GHz (upper mid-band), 30 GHz (section 8) and 100 GHz (the top of the TR 37.885 / TR 38.901 range); `FC_GHZ` in `pipeline/collect.py`.
 
@@ -428,4 +428,47 @@ Same evaluation as section 8 (same 3 seed sets, 8 conditions × 150 s) with the 
   - The remaining gain comes from fresher information and less energy: E −18%.
 - **Accuracy.** The twin is less accurate than with the baselines in every band. The gap to the fixed policy is 7.6, 7.2 and 4.9 points; at 15 and 100 GHz the 3-set interval includes 0.
 - **Claim.** "Evaluated across 6G candidate bands from 15 to 100 GHz with the 3GPP TR 37.885 mmWave V2V channel". Do not claim 6G performance or real-channel behaviour: no ray tracing (Sionna RT) and no measurements.
+
+### 10. Final configuration: age bridging + twin-aided beam tracking (2026-11-06) — `results/eval_final_v2.json`, `results/eval_band_15ghz_v2.json`, `results/eval_band_100ghz_v2.json`, `results/eval_ablation_age_bridging_beam_tracking.json`
+
+**Diagnosis of the accuracy gap in sections 8–9.** TwinTrust-AP already chose long horizons (mean H about 9 under latency). The cause was elsewhere: the `synchronize` action switched prediction off, and the following `beam_switch` actions left it off. The twin then extrapolated only 0.2 s while its V2X information was 0.4–0.9 s old. Under +300 ms latency it was correct 72.8% of the time (fixed policy 97.1%).
+
+**Changes (TwinTrust-AP only; the fixed and age-of-information baselines are unchanged):**
+1. **Age bridging** (`TTAP_CFG.AGE_FLOOR`). Prediction stays on, and the horizon H is at least the mean information age (rounded up to the next allowed horizon).
+2. **Twin-aided beam tracking** (`TTAP_CFG.DT_BEAM`). Between sweeps, each tracked beam is steered to the twin's predicted position of that vehicle, instead of keeping the bearing of the last sweep. This is digital-twin-aided beam management; isolated (untrusted) vehicles are excluded.
+3. **Energy term.** The GRU predicts all horizons in one pass, so its prediction cost in E is charged at H = 5 whatever H is. The old term charged per horizon step, which models step-by-step CTRV rollout. The baselines use H = 5, so their J is unchanged and their runs were reused from sections 8–9.
+
+The table (b1) and calibration were **not** re-tuned. Calibration error on the new on-policy runs is 0.054 (30 GHz), 0.041 (15 GHz) and 0.046 (100 GHz), against 0.049 before. Run with `AGE_FLOOR=0` / `DT_BEAM=0` for the ablations (`pipeline/collect.py`).
+
+**Results (3 seed sets × 8 conditions × 150 s; 95% Student-t intervals of paired differences):**
+
+| Band | Policy | J | Vehicle twin correct | Syncs/s | E |
+|---|---|---:|---:|---:|---:|
+| 15 GHz | TwinTrust-AP | **0.055** | 89.0% | **16.0** | **0.207** |
+| | fixed | 0.132 | 87.5% | 44.4 | 0.355 |
+| | AoI 0.5 s | 0.139 | 89.0% | 113.7 | 0.447 |
+| 30 GHz | TwinTrust-AP | **0.056** | 88.2% | **17.9** | **0.210** |
+| | fixed | 0.139 | 85.8% | 44.5 | 0.372 |
+| | AoI 0.5 s | 0.142 | 88.5% | 116.0 | 0.456 |
+| 100 GHz | TwinTrust-AP | **0.101** | **88.4%** | **28.4** | **0.273** |
+| | fixed | 0.145 | 82.3% | 44.7 | 0.378 |
+| | AoI 0.5 s | 0.147 | 86.4% | 119.3 | 0.471 |
+
+- **Against the fixed policy.**
+  - ΔJ: −0.077 [−0.094, −0.060], −0.083 [−0.104, −0.062], −0.044 [−0.053, −0.035].
+  - Δ syncs/s: −28.5 [−36.2, −20.7], −26.6 [−34.5, −18.7], −16.3 [−27.3, −5.3].
+  - Δ twin correct: +1.6 [+0.3, +2.8], +2.4 [−0.6, +5.4], +6.2 [+5.0, +7.3] points.
+- **Against the age-of-information baseline.**
+  - Twin correct: 0.0 [−1.9, +1.8], −0.2 [−1.3, +0.9], +2.1 [+1.1, +3.1] points.
+  - It syncs 4 to 7 times as often.
+- **Against sections 8–9 (same seeds).** Twin correct +9.6 points at 30 GHz [+6.5, +12.7]. Under latency it is now 99.7% (was 72.8%), and under loss + latency 96.0% (was 54.4%).
+- **Ablation at 30 GHz.**
+  - Without age bridging: twin correct −7.8 points [−12.9, −2.7], J unchanged within the interval.
+  - Without beam tracking: twin correct −1.1 points [−1.6, −0.6], J +0.017 [−0.004, +0.038].
+  - So the accuracy gain comes mainly from age bridging. Beam tracking adds a small, consistent accuracy gain.
+  - Beam tracking was not ablated separately at 15 and 100 GHz.
+- **Claims these results support.**
+  - "Resource-efficient": a lower J and fewer synchronisations than both baselines in every band, without lower twin accuracy.
+  - "6G": evaluated across 6G candidate bands (15–100 GHz) with the 3GPP TR 37.885 channel, plus digital-twin-aided beam tracking.
+  - Still not supported: ray-traced (Sionna RT) or measured channels, terahertz bands, or joint sensing and communication.
 
