@@ -39,6 +39,8 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
   - **Criticality C:** the weighted sum of closing speed, blocked links, information age, channel loss and traffic density.
   - **GDCA authority A = exp(−½z²)**, from per-object residuals against their robust spread.
   - **TAHS:** sets the prediction horizon H from T, C and A.
+  - **GRU twin predictor:** each V2X vehicle's position is predicted from its last 8 messages by a trained GRU (Vaishnavi's `GRUPredictor` architecture), up to the horizon H.
+  - **3GPP mmWave V2V channel:** TR 37.885 path loss, vehicle and building blockage and shadowing, with the TR 38.901 beam pattern; misaligned beams lose gain until the next beam sweep.
   - **FSDP:** a 3 × 3 table (trust bin × criticality bin) that picks one of six actions: synchronize, predict, beam switch, reduce horizon, increase horizon, maintain state.
   - **Joint beam adaptation:** in the same cycle, the beam is switched when buildings block at least 5% of V2V links, so prediction, synchronisation and beam are decided together.
   - **Fixed policy:** a toggle switches to a baseline (horizon 5, edge sync every 1 s) so the resource use can be compared.
@@ -58,9 +60,8 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
 - Everything is simulated in the browser. It is not connected to CARLA, SUMO, Sionna RT or the project backend.
 - The TwinTrust-AP formulas are Vaishnavi's Python code (copied unchanged into `research/aegis_ai/`), ported to JavaScript and checked case by case (`research/tests/`). The evidence that feeds them, the calibration and the FSDP table come from **this simulated city**, not from CARLA or real vehicles.
 - The FSDP table was chosen as the lowest-cost table that keeps the twin as accurate as the fixed policy. No candidate met that in every condition; the closest one was chosen.
-- The demo runs table b1 with a simple **mmWave beam model** (12° beams, 20 ms sweeps) and joint beam adaptation. In recorded test runs this cut the J objective by 30% against the fixed policy, with twin correctness 3.5 points lower (51.2% vs 54.7%).
-- A literature baseline (age-of-information threshold updates, Kaul et al. 2012; Sun et al. 2017) and three repeated seed sets were added: J 0.092 (TwinTrust-AP) vs 0.129 (fixed) vs 0.136 (age threshold 0.8 s), with twin correctness about 4 points lower for TwinTrust-AP. Seeded runs are statistically repeatable, not bit-identical. See `research/README.md` sections 6–7.
-- The beam model is a simple geometric mmWave model, not a ray-traced channel (Sionna RT). See `research/README.md`.
+- Final configuration (see `research/README.md` section 8): V2V links use the 3GPP TR 37.885 mmWave V2V channel with the TR 38.901 beam pattern (30 GHz), and the twin predicts vehicles with a trained GRU (Vaishnavi's `GRUPredictor`). Against a fixed policy and an age-of-information baseline (Kaul et al. 2012; Sun et al. 2017), over 3 seed sets: J 0.083 vs 0.139 vs 0.142, 31% fewer synchronisations and 33% less modelled energy than the fixed policy. The vehicle twin is correct 78.6% vs 85.8% vs 88.5% of the time, so the accuracy rule is not met. Seeded runs are statistically repeatable, not bit-identical.
+- The channel is a 3GPP statistical mmWave model on the simulated geometry, not a ray-traced (Sionna RT) or measured channel. See `research/README.md`.
 - The weights of the Trust Score's hazard terms and the evidence scales (3 m error, 1 s age, 300 ms latency) are design choices, not fitted values.
 - Weather changes visuals and the reported road friction only. Vehicle dynamics do not change with weather.
 - Collision risk is evaluated only while the ego is moving. Being hit from behind while stationary is not modelled.
