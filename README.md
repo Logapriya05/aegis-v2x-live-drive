@@ -2,6 +2,8 @@
 
 **Aegis-V2X: A Calibrated Trust-Driven Autonomic Framework for Joint Prediction, Synchronization and Beam Adaptation in Digital Twin-Assisted 6G V2X Networks**
 
+Live demo: https://logapriya05.github.io/aegis-v2x-live-drive/
+
 A playable, browser-based demonstration of the **Aegis-V2X** project (B.Tech research project, Hindustan University, targeting IEEE PerCom 2027). You drive an ego vehicle through an endless city. Beside the road view, a live **digital twin** is rebuilt only from V2X messages and LiDAR. The page also shows a **Trust Score**, lane monitoring, collision prediction and V2X communication in real time.
 
 It is a single self-contained page (`index.html`) with no build step and no backend. The `research/` folder holds the algorithm source, the tests and the scripts that produced the calibration and the FSDP table.
