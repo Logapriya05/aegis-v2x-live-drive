@@ -1,0 +1,21 @@
+{
+ "about": "Evaluation scenario catalogue for the live-drive simulation. Single source used by pipeline/collect.py. Math.random is replaced by a seeded generator, seed = seed_base*7919 + mode offset (explore 0, evaluation 100003) + SEED_OFF. Runs are statistically repeatable, not bit-identical (the 2.5 s page-load warm-up runs in real time; see README.md).",
+ "ego_driver": "automatic: brake when time-to-collision < 2.5 s and speed > 2 m/s, else accelerate up to ego_speed_mps",
+ "warmup_s": 3,
+ "faults": {
+  "loss": {"what": "V2X packet loss", "effect": "+0.60 loss probability on every V2X message; +0.25 on edge-sync messages", "category": "communication degradation"},
+  "lat": {"what": "latency spike", "effect": "+280-360 ms on every V2X and edge-sync message (uniform)", "category": "communication degradation / stale information"},
+  "lidar": {"what": "LiDAR degradation", "effect": "range 75 m -> 35 m, position noise sigma 0.15 m -> 2.2 m", "category": "perception degradation"},
+  "spoof": {"what": "position spoofing by one V2X vehicle", "effect": "the nearest connected vehicle inside LiDAR range reports its position 11 m ahead and 3.5 m sideways", "category": "adversarial / inconsistent V2X"}
+ },
+ "conditions": [
+  {"name": "normal", "faults": [], "ego_speed_mps": 11, "seed_base": 1, "severity": "none", "purpose": "nominal urban traffic"},
+  {"name": "normal_fast", "faults": [], "ego_speed_mps": 16, "seed_base": 2, "severity": "none", "purpose": "higher ego speed, faster bearing drift of mmWave beams"},
+  {"name": "loss", "faults": ["loss"], "ego_speed_mps": 11, "seed_base": 3, "severity": "single", "purpose": "packet loss"},
+  {"name": "latency", "faults": ["lat"], "ego_speed_mps": 11, "seed_base": 4, "severity": "single", "purpose": "stale twin information"},
+  {"name": "lidar_degraded", "faults": ["lidar"], "ego_speed_mps": 11, "seed_base": 5, "severity": "single", "purpose": "weaker verification of the twin by the ego's own sensor"},
+  {"name": "spoof", "faults": ["spoof"], "ego_speed_mps": 11, "seed_base": 6, "severity": "single", "purpose": "malicious V2X source"},
+  {"name": "loss_latency", "faults": ["loss", "lat"], "ego_speed_mps": 13, "seed_base": 7, "severity": "compound", "purpose": "two simultaneous communication faults"},
+  {"name": "slow_dense", "faults": [], "ego_speed_mps": 6, "seed_base": 8, "severity": "none", "purpose": "slow driving in dense traffic"}
+ ]
+}

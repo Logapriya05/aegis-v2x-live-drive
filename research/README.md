@@ -43,7 +43,7 @@ Last run (2026-11-04):
 
 ## Pipeline
 
-`pipeline/collect.py` runs the demo headless with Playwright, seeded so every run is reproducible.
+`pipeline/collect.py` runs the demo headless with Playwright. The conditions come from `scenarios.json` (the scenario catalogue). Math.random is seeded per condition, but runs are **not bit-identical**: the page's 2.5 s load warm-up runs in real time, so the machine's speed changes how many random numbers are used before the seeded run starts. Repeating a seed set gives statistically similar, not identical, results (for example J 0.1278 vs 0.1284 for the fixed policy on the same seeds).
 
 - **Conditions:** 8 conditions × 150 s: normal, normal_fast, packet loss, +300 ms latency, LiDAR degradation, spoofing, loss + latency, slow dense traffic.
 - **Driving:** a simple autopilot drives (it brakes when TTC < 2.5 s).
@@ -61,6 +61,15 @@ python3 pipeline/select_policy.py s_fixed.jsonl s_c*.jsonl                      
 python3 pipeline/collect.py eval_tt.jsonl twintrust - results/fsdp_policy.json
 python3 pipeline/collect.py eval_fx.jsonl fixed
 python3 pipeline/summarize_eval.py eval_tt.jsonl eval_fx.jsonl eval_summary.json
+# age-of-information baseline: threshold search on the selection seeds, then repeated runs (section 6)
+for th in 0.2 0.35 0.5 0.8; do SEED_OFF=777 AOI_THR=$th python3 pipeline/collect.py s_aoi$th.jsonl aoi - - 90; done
+for so in 0 2000 4000; do
+  SEED_OFF=$so python3 pipeline/collect.py ev${so}_fixed.jsonl fixed
+  SEED_OFF=$so python3 pipeline/collect.py ev${so}_b1.jsonl twintrust - results/fsdp_policy.json
+  SEED_OFF=$so AOI_THR=0.8 python3 pipeline/collect.py ev${so}_aoi.jsonl aoi
+  SEED_OFF=$so AOI_THR=0.2 python3 pipeline/collect.py ev${so}_aoi02.jsonl aoi
+done
+python3 pipeline/summarize_repeated.py eval_repeated.json ev0 ev2000 ev4000
 ```
 
 Recorded `.jsonl` files (about 7 MB each) are not committed; the seeds reproduce them.
@@ -230,3 +239,74 @@ Not yet experimentally verified beyond these simulated runs. No CARLA, Sionna RT
 - **What can be claimed:** in this simulation, joint trust-driven control of prediction horizon, synchronisation and beam lowers the J objective by 30% at a cost of about 3.5 points of twin accuracy.
 
 Not yet experimentally verified beyond these simulated runs. No CARLA, Sionna RT or hardware results are claimed.
+
+### 6. Literature baseline and repeated runs (2026-11-06) — `results/eval_repeated.json`
+
+**Baseline: age-of-information (AoI) threshold updates.** The twin is synchronised (with a beam sweep, like the fixed policy) whenever the mean age of its V2X information exceeds a threshold; horizon 5, prediction always on. Threshold policies are the standard way to keep information fresh in the AoI literature:
+
+- Kaul, Yates, Gruteser, "Real-time status: How often should one update?", IEEE INFOCOM 2012 (the AoI metric).
+- Sun, Uysal-Biyikoglu, Yates, Koksal, Shroff, "Update or Wait: How to Keep Your Data Fresh", IEEE Trans. Inf. Theory, 2017 (threshold-type update policies).
+
+This is our implementation of the threshold idea in this simulation, not the authors' code. Demo mode `aoi` (headless only), `TTAP_CFG.AOI`.
+
+**Threshold choice** (`results/aoi_threshold_search.json`, selection seeds, 90 s per condition):
+
+| Policy | J | Twin correct | Syncs/s |
+|---|---:|---:|---:|
+| Fixed policy | 0.131 | 54.6% | 47.2 |
+| b1 | 0.092 | 50.5% | 40.9 |
+| AoI 0.8 s | 0.138 | 52.4% | 45.6 |
+| AoI 0.5 s | 0.147 | 58.0% | 108.1 |
+| AoI 0.35 s | 0.174 | 62.1% | 177.5 |
+| AoI 0.2 s | 0.234 | 68.4% | 301.4 |
+
+- **Main baseline: 0.8 s.** It has the lowest J of the AoI thresholds and about the same sync budget as the fixed policy.
+- **High-accuracy reference: 0.2 s.** It is the only threshold that meets the accuracy rule, at about 6 times the synchronisation.
+
+**Repeated runs.** Three new seed sets (`SEED_OFF` 0, 2000, 4000), 8 conditions × 150 s each, all four policies. The 95% CIs use Student's t over the 3 seed sets (2 degrees of freedom), so they are wide.
+
+| Policy | J | Twin correct | Syncs/s | Beam sweeps/s |
+|---|---:|---:|---:|---:|
+| **TwinTrust-AP (b1)** | **0.092** | 52.5% | 49.5 | 4.72 |
+| Fixed (H 5, sync + sweep every 1 s) | 0.129 | 56.6% | 44.8 | 1.00 |
+| AoI threshold 0.8 s | 0.136 | 56.5% | 48.2 | 1.07 |
+| AoI threshold 0.2 s | 0.215 | 69.1% | 274.1 | 6.14 |
+
+| Difference (b1 − other) | ΔJ [95% CI] | Δ twin correct [95% CI] | Δ syncs/s [95% CI] |
+|---|---|---|---|
+| vs fixed | −0.036 [−0.047, −0.026] | −4.1 points [−8.8, +0.7] | +4.7 [+2.1, +7.4] |
+| vs AoI 0.8 s | −0.044 [−0.065, −0.023] | −4.0 points [−7.0, −0.9] | +1.3 [−2.6, +5.2] |
+| vs AoI 0.2 s | −0.123 [−0.133, −0.113] | −16.7 points [−21.1, −12.3] | −225 [−240, −209] |
+
+**Per condition** (mean over the 3 sets, no interval):
+
+| Condition | J b1 | J fixed | J AoI 0.8 | Correct b1 | Correct fixed | Correct AoI 0.8 |
+|---|---:|---:|---:|---:|---:|---:|
+| normal | 0.012 | 0.071 | 0.078 | 58.9% | 61.2% | 58.7% |
+| normal_fast | 0.018 | 0.072 | 0.085 | 56.6% | 63.8% | 56.6% |
+| loss | 0.106 | 0.166 | 0.151 | 57.6% | 67.5% | 70.3% |
+| latency | 0.193 | 0.179 | 0.223 | 55.4% | 65.3% | 67.0% |
+| lidar_degraded | 0.133 | 0.153 | 0.148 | 8.4% | 8.5% | 8.2% |
+| spoof | 0.020 | 0.084 | 0.086 | 56.0% | 59.7% | 53.9% |
+| loss_latency | 0.252 | 0.243 | 0.256 | 61.9% | 62.9% | 74.5% |
+| slow_dense | 0.006 | 0.061 | 0.062 | 65.1% | 63.6% | 62.6% |
+
+**How to read this:**
+
+- **J.** TwinTrust-AP has the lowest J against both baselines on every seed set, and the intervals exclude 0.
+- **Accuracy.** Twin correctness is about 4 points lower than the fixed policy (the interval includes 0) and than AoI 0.8 s (the interval excludes 0). The accuracy rule is still not met.
+- **What the AoI baseline adds.** At the same sync budget, the age threshold does not do better than syncing every second (J 0.136 vs 0.129). Information age alone does not tell the twin where to sync. To reach high accuracy, the age threshold needs about 6 times the synchronisation.
+- **Where b1 loses.** Under latency and loss + latency, b1's J is not lower and its accuracy is clearly lower. This is the known short-horizon-under-delay limitation.
+- **Low LiDAR accuracy.** Correctness is about 8% for every policy under LiDAR degradation, because the "correct" test (within 1 m of the LiDAR position) fails with 2.2 m LiDAR noise. It measures the reference sensor, not the twin.
+
+Simulation only. Not yet experimentally verified on CARLA, Sionna RT or hardware.
+
+### 7. Decision time on a CPU — `results/decision_timing_cpu.json`
+
+`evaluation/benchmark_twintrust_ap.py` (in `bossygirl-1818/Aegis-V2X`) times one decision cycle of the Python code: evidence → calibrated trust → criticality → TAHS → FSDP.
+
+- **Setup:** 20,000 cycles with seeded random inputs, on a 2-vCPU Intel Xeon 2.1 GHz cloud VM with Python 3.13.
+- **Latency:** mean 13.2 µs, median 11.2 µs, p99 32.7 µs, max 172 µs. This is far inside the 100 ms budget of the 10 Hz loop.
+- **Memory:** peak traced Python allocation of 8.5 KiB over 1,000 cycles.
+- **Scope:** decision logic only. It excludes perception and the digital-twin update, and it was not measured on a Jetson Orin (future work). Re-run it on the target machine before quoting it for that machine.
+
