@@ -412,6 +412,39 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
 @media (max-width:1100px){.ph p{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
 
+/* ---------- monitoring dashboard (demo data, Grafana-style) ---------- */
+.demoband{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:var(--gap);border-radius:var(--r-md);background:var(--warn-soft);border:1px solid rgba(255,182,72,.35);color:#ffd9a0;font-size:12.5px;font-weight:500}
+.demoband .ic{width:18px;height:18px;flex:none;color:var(--warn)}
+.demoband b{color:#ffe6bd}
+.montool{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:var(--gap)}
+.montool .seg{display:flex;gap:2px;padding:3px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--border)}
+.montool .seg button{background:transparent;border:0;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;white-space:nowrap;transition:background .15s var(--ease),color .15s var(--ease)}
+.montool .seg button.on{background:var(--accent-soft);color:#d6e5ff;box-shadow:inset 0 0 0 1px rgba(76,141,255,.4)}
+.montool .spacer{flex:1 1 auto}
+.montool .upd{font-size:11.5px;color:var(--text-3);white-space:nowrap}
+.montool .upd b{color:var(--text-2);font-family:var(--f-mono);font-weight:500}
+.mongrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap);margin-bottom:var(--gap)}
+.monchart{display:flex;flex-direction:column}
+.monchart .ph{min-height:auto;padding:11px 13px 9px}
+.monchart .ph h2{font-size:13px}
+.monchart .mv{margin-left:auto;text-align:right}
+.monchart .mv b{display:block;font-family:var(--f-mono);font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--text)}
+.monchart .mv span{font-size:10.5px;color:var(--text-3)}
+.monchart canvas{display:block;width:100%;height:118px}
+.monchart .legend{display:flex;align-items:center;gap:6px;padding:0 13px 10px;font-size:11px;color:var(--text-3)}
+.monchart .legend i{width:8px;height:8px;border-radius:2px;flex:none}
+.mon2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:var(--gap);margin-bottom:var(--gap)}
+.monconn{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px var(--pad) 14px}
+.connchip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);background:rgba(255,255,255,.025);border:1px solid var(--border);font-size:12px}
+.connchip i{width:7px;height:7px;border-radius:50%;flex:none;box-shadow:0 0 0 3px currentColor;opacity:.9}
+.connchip i.ok{background:var(--ok);color:rgba(69,227,143,.18)}
+.connchip i.warn{background:var(--warn);color:rgba(255,182,72,.18)}
+.connchip b{font-family:var(--f-mono);font-weight:500;color:var(--text)}
+.connchip span{margin-left:auto;color:var(--text-3);font-size:11px;white-space:nowrap}
+@media (max-width:1280px){.mongrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1000px){.mon2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){.mongrid{grid-template-columns:minmax(0,1fr)}.monconn{grid-template-columns:minmax(0,1fr)}}
+
 </style>
 </head>
 <body>
@@ -518,6 +551,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
       <button type="button" role="tab" id="t-v2x" aria-selected="false" data-tab="v2x"><svg class="ic" aria-hidden="true"><use href="#i-radio"/></svg>V2X communication</button>
       <button type="button" role="tab" id="t-twin" aria-selected="false" data-tab="twin"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg>Digital twin</button>
       <button type="button" role="tab" id="t-ttap" aria-selected="false" data-tab="ttap"><svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg>TwinTrust-AP</button>
+      <button type="button" role="tab" id="t-monitor" aria-selected="false" data-tab="monitor"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Monitoring (demo)</button>
       <button type="button" role="tab" id="t-life" aria-selected="false" data-tab="life"><svg class="ic" aria-hidden="true"><use href="#i-route"/></svg>Vehicle life log</button>
       <button type="button" role="tab" id="t-faults" aria-selected="false" data-tab="faults"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>Fault injection</button>
     </div>
@@ -639,6 +673,46 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
             <p class="fine">Calibrated means T matches how often the twin is really right. Target: a twin object is within 1 m of where LiDAR sees it on the next cycle. Fitted on recorded cycles from this simulated city, not from CARLA.</p></article>
         </div>
       </div>
+    </div>
+
+    <div class="tabpanel" id="tab-monitor" role="tabpanel" hidden>
+      <div class="demoband"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span><b>Demo data only.</b> Every number, chart and table on this tab is a simulated sample feed for layout/UX purposes. It is <b>not</b> connected to the live TwinTrust-AP simulation, the FastAPI backend, Prometheus or a real Grafana instance, and does not reflect measured results — see the "TwinTrust-AP" tab and <code>research/README.md</code> for those.</span></div>
+      <div class="montool">
+        <div class="seg" role="group" aria-label="Time range" id="monRange">
+          <button type="button" data-range="300" class="on">Last 5 minutes</button>
+          <button type="button" data-range="900">Last 15 minutes</button>
+          <button type="button" data-range="3600">Last 1 hour</button>
+        </div>
+        <button type="button" class="btn on" id="monAuto"><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Auto-refresh</button>
+        <button type="button" class="btn" id="monRefresh"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>Refresh now</button>
+        <div class="spacer"></div>
+        <div class="upd">Last updated <b id="monUpdated">—</b></div>
+      </div>
+
+      <div class="tiles" id="monStats" aria-label="Monitoring summary (demo data)"></div>
+
+      <div class="mongrid" id="monCharts"></div>
+
+      <div class="mon2">
+        <article class="card">
+          <header><h3><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Vehicle telemetry (demo)</h3><span class="sub">Sample feed · one row per simulated connection</span></header>
+          <div class="tablewrap"><table><thead><tr><th>Vehicle</th><th>Trust</th><th>Latency</th><th>Beam</th><th>Sync</th><th>Status</th></tr></thead><tbody id="monVehBody"></tbody></table></div>
+        </article>
+        <article class="card">
+          <header><h3><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg>Network health (demo)</h3><span class="sub">Sample status indicators</span></header>
+          <dl class="status" id="monHealth"></dl>
+        </article>
+      </div>
+
+      <div class="two">
+        <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-radio"/></svg>Active vehicle connections (demo)</h3><span class="sub">Sample link list</span><span class="tag" id="monConnCount">—</span></header>
+          <div class="monconn" id="monConn"></div>
+        </article>
+        <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Recent system events (demo)</h3><span class="sub">Simulated event feed</span></header>
+          <ul class="feed" id="monEvents"></ul>
+        </article>
+      </div>
+      <p class="fine">This panel is a self-contained UI mock styled after Grafana, built to demonstrate what a production monitoring dashboard for Aegis-V2X could look like. All series are generated client-side with a seeded random walk and never read from the simulation, the backend, or any file under <code>research/results/</code>.</p>
     </div>
 
     <div class="tabpanel" id="tab-life" role="tabpanel" hidden>
@@ -2245,8 +2319,82 @@ function setScoreMode(m){scoreMode=m;document.querySelectorAll('.aggsw button').
 /* ---------- dashboard tabs ---------- */
 let curTab='overview';
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{curTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
-  document.querySelectorAll('.tabpanel').forEach(p=>{p.hidden=p.id!=='tab-'+curTab});sampleHist();renderLife();renderTTAP()}));
+  document.querySelectorAll('.tabpanel').forEach(p=>{p.hidden=p.id!=='tab-'+curTab});sampleHist();renderLife();renderTTAP();if(curTab==='monitor')renderMonitor(true)}));
 
+/* ---------- Monitoring dashboard (demo data only) ----------
+   Entirely self-contained: a seeded random walk per series, never reading
+   from the simulation, the backend, or research/results/. Exists to show
+   what a production Grafana-style view of Aegis-V2X could look like. */
+const MON=(()=>{
+  let seedN=20261106>>>0;
+  const rnd=()=>{seedN=(seedN+0x6D2B79F5)|0;let t=Math.imul(seedN^seedN>>>15,1|seedN);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const SERIES=[
+    {key:'trust',label:'Trust Score',min:.72,max:.97,start:.86,step:.012,fmt:v=>v.toFixed(2),card:v=>v.toFixed(2),color:'#45e38f'},
+    {key:'latency',label:'Network Latency',min:12,max:48,start:24,step:1.6,fmt:v=>v.toFixed(0)+'ms',card:v=>v.toFixed(0)+' ms',color:'#22d3ee'},
+    {key:'conn',label:'Vehicle Connectivity',min:82,max:100,start:96,step:1.2,fmt:v=>v.toFixed(0)+'%',card:v=>v.toFixed(0)+'%',color:'#5aa9ff'},
+    {key:'beam',label:'Beam Adaptation Activity',min:0,max:14,start:5,step:1.8,fmt:v=>v.toFixed(0)+'/m',card:v=>v.toFixed(0)+'/min',color:'#f472b6'},
+    {key:'acc',label:'Prediction Accuracy',min:78,max:98,start:90,step:1.4,fmt:v=>v.toFixed(0)+'%',card:v=>v.toFixed(0)+'%',color:'#4c8dff'},
+    {key:'sync',label:'Synchronization Performance',min:7.5,max:10,start:9.2,step:.22,fmt:v=>v.toFixed(1)+'Hz',card:v=>v.toFixed(1)+' Hz',color:'#ffb648'},
+    {key:'horizon',label:'Prediction Horizon',min:.1,max:1,start:.5,step:.06,fmt:null,card:v=>v.toFixed(1)+' s',color:'#a78bfa'},
+    {key:'vehcount',label:'Vehicle Count',min:28,max:58,start:42,step:3,fmt:null,card:v=>Math.round(v)+'',color:'#cbd5e1'},
+  ];
+  const STEP_MS=5000,POINTS=720; // 720*5s = 1h buffer; the time-range control just slices the tail
+  const buf={};
+  const walk=(prev,s)=>{const v=prev+(rnd()-.5)*2*s.step+(s.start-prev)*.025;return Math.min(s.max,Math.max(s.min,v))};
+  const seedBuf=()=>{const now=Date.now();for(const s of SERIES){let v=s.start;const arr=[];for(let i=POINTS-1;i>=0;i--){v=walk(v,s);arr.unshift({t:now-i*STEP_MS,v})}buf[s.key]=arr}};
+  seedBuf();
+  const names=['EGO-01','V2V-14','V2V-27','V2V-33','V2I-RSU-02','V2P-09','V2V-41','V2E-05'];
+  const vehicles=names.map(n=>({id:n,trust:.68+rnd()*.3,latency:14+rnd()*32,beam:rnd()>.55,sync:.84+rnd()*.15,ok:rnd()>.1}));
+  const kinds=[['ok','Beam re-aligned to predicted twin position'],['ok','Edge synchronization completed'],['warn','Latency spike observed on a V2V link (41 ms)'],['ok','Trust score recalibrated'],['warn','A vehicle link was briefly isolated'],['ok','Prediction horizon increased']];
+  const now0=Date.now();
+  const events=Array.from({length:8},(_,i)=>{const k=kinds[Math.floor(rnd()*kinds.length)];return{sev:k[0],msg:k[1],ts:now0-i*41000-Math.floor(rnd()*23000)}});
+  return{SERIES,buf,vehicles,events,rangeSec:300,auto:true,timer:null,
+    latest(key){const a=this.buf[key];return a[a.length-1].v},
+    step(){const now=Date.now();for(const s of SERIES){const arr=this.buf[s.key];const v=walk(arr[arr.length-1].v,s);arr.push({t:now,v});if(arr.length>POINTS)arr.shift()}},
+    slice(key){const n=Math.max(2,Math.round(this.rangeSec/(STEP_MS/1000)));return this.buf[key].slice(-n)}};
+})();
+function monFmtTime(ts){return new Date(ts).toLocaleTimeString([],{hour12:false})}
+function monChart(c,points,color,fmt){const d=sizeCanvas(c);if(!d||points.length<2)return;const g=c.getContext('2d');const W=c.width,H=c.height;g.clearRect(0,0,W,H);
+  const vals=points.map(p=>p.v);let mn=Math.min(...vals),mx=Math.max(...vals);if(mx-mn<1e-6){mx+=.5;mn-=.5}
+  const padL=4*d,padR=4*d,padT=8*d,padB=15*d;const xs=i=>padL+i/(points.length-1)*(W-padL-padR),ys=v=>H-padB-(v-mn)/(mx-mn)*(H-padT-padB);
+  g.strokeStyle='rgba(132,151,178,.14)';g.lineWidth=1;for(const f of[0,.5,1]){const y=padT+(H-padT-padB)*f;g.beginPath();g.moveTo(padL,y);g.lineTo(W-padR,y);g.stroke()}
+  const gr=g.createLinearGradient(0,padT,0,H-padB);gr.addColorStop(0,color+'4d');gr.addColorStop(1,color+'00');
+  g.beginPath();g.moveTo(xs(0),H-padB);points.forEach((p,i)=>g.lineTo(xs(i),ys(p.v)));g.lineTo(xs(points.length-1),H-padB);g.closePath();g.fillStyle=gr;g.fill();
+  g.beginPath();points.forEach((p,i)=>i?g.lineTo(xs(i),ys(p.v)):g.moveTo(xs(i),ys(p.v)));g.strokeStyle=color;g.lineWidth=1.6*d;g.lineJoin='round';g.stroke();
+  g.fillStyle='rgba(166,180,201,.8)';g.font=(9*d)+'px ui-monospace,SFMono-Regular,monospace';g.textBaseline='middle';
+  g.textAlign='left';g.fillText(fmt(mx),padL,padT+3*d);g.fillText(fmt(mn),padL,H-padB-3*d);
+  g.textAlign='left';g.fillText(monFmtTime(points[0].t),padL,H-4*d);
+  g.textAlign='right';g.fillText(monFmtTime(points[points.length-1].t),W-padR,H-4*d)}
+function monBuildOnce(){
+  $('monCharts').innerHTML=MON.SERIES.filter(s=>s.fmt).map(s=>`<article class="card monchart"><header class="ph"><h2><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>${s.label}</h2>
+    <div class="mv"><b id="monV_${s.key}">—</b><span>live demo value</span></div></header>
+    <canvas id="monC_${s.key}"></canvas>
+    <div class="legend"><i style="background:${s.color}"></i>${s.label} · sample feed, not measured</div></article>`).join('');
+  $('monStats').innerHTML=[['vehcount','Vehicle Count','connected (demo)'],['trust','Average Trust Score','calibrated T (demo)'],['latency','Average Latency','one-way (demo)'],
+    ['beam','Beam Switches','rolling rate (demo)'],['horizon','Prediction Horizon','TAHS-style (demo)'],['sync','Synchronization Rate','edge sync (demo)']]
+    .map(([k,label,sub])=>`<div class="tile"><small>${label}</small><div class="n" id="monN_${k}">—</div><div class="s">${sub}</div><canvas id="monS_${k}"></canvas></div>`).join('');
+  document.querySelectorAll('#monRange button').forEach(b=>b.addEventListener('click',()=>{MON.rangeSec=+b.dataset.range;document.querySelectorAll('#monRange button').forEach(x=>x.classList.toggle('on',x===b));renderMonitor(true)}));
+  $('monAuto').addEventListener('click',()=>{MON.auto=!MON.auto;$('monAuto').classList.toggle('on',MON.auto);monScheduleAuto()});
+  $('monRefresh').addEventListener('click',()=>{MON.step();renderMonitor(true)});
+}
+function monScheduleAuto(){if(MON.timer){clearInterval(MON.timer);MON.timer=null}if(MON.auto)MON.timer=setInterval(()=>{MON.step();renderMonitor()},3000)}
+function renderMonitor(force){if(curTab!=='monitor'&&!force)return;if(!$('monCharts').children.length)monBuildOnce();
+  $('monUpdated').textContent=monFmtTime(Date.now());
+  for(const k of['vehcount','trust','latency','beam','horizon','sync']){const s=MON.SERIES.find(x=>x.key===k),v=MON.latest(k);$('monN_'+k).textContent=s.card(v);
+    const sp=$('monS_'+k);if(sp)spark(sp,MON.buf[k].slice(-120).map(p=>p.v),s.max,s.color)}
+  for(const s of MON.SERIES){if(!s.fmt)continue;const pts=MON.slice(s.key);const c=$('monC_'+s.key);if(!c)continue;monChart(c,pts,s.color,s.fmt);$('monV_'+s.key).textContent=s.card(MON.latest(s.key))}
+  $('monVehBody').innerHTML=MON.vehicles.map(v=>`<tr><td>${v.id}</td><td>${(v.trust*100).toFixed(0)}%</td><td>${v.latency.toFixed(0)} ms</td><td>${v.beam?'Active':'Idle'}</td><td>${(v.sync*100).toFixed(0)}%</td>
+    <td><span class="pill ${v.ok?'ok':'warn'}">${v.ok?'Healthy':'Degraded'}</span></td></tr>`).join('');
+  const healthy=MON.vehicles.filter(v=>v.ok).length;
+  $('monHealth').innerHTML=`<dt>Overall status</dt><dd>${healthy===MON.vehicles.length?'All systems nominal (demo)':'Degraded link (demo)'}</dd>
+    <dt>Backend reachability</dt><dd>Not applicable (demo)</dd><dt>Prometheus scrape</dt><dd>Not applicable (demo)</dd>
+    <dt>Grafana datasource</dt><dd>Not applicable (demo)</dd><dt>Sample size</dt><dd>${MON.vehicles.length} vehicles</dd>
+    <dt>Healthy links</dt><dd>${healthy}/${MON.vehicles.length}</dd>`;
+  $('monConnCount').textContent=healthy+'/'+MON.vehicles.length+' healthy';
+  $('monConn').innerHTML=MON.vehicles.map(v=>`<div class="connchip"><i class="${v.ok?'ok':'warn'}"></i><b>${v.id}</b><span>${(v.sync*100).toFixed(0)}% sync</span></div>`).join('');
+  $('monEvents').innerHTML=MON.events.map(e=>`<li><i style="background:${e.sev==='ok'?'#45e38f':'#ffb648'}"></i><b>${e.msg}</b><span>${monFmtTime(e.ts)} · demo event</span></li>`).join('');
+}
+monScheduleAuto();
 
 /* ---------- TwinTrust-AP tab ---------- */
 const ACT_LABEL={synchronize:'Synchronize',predict:'Predict',beam_switch:'Beam switch',reduce_horizon:'Reduce horizon',increase_horizon:'Increase horizon',maintain_state:'Maintain state'};
