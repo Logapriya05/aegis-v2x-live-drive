@@ -1986,6 +1986,23 @@ const ttap = { mode: 'twintrust', H: 5, hIdxOff: 0, predictOn: true, relayUntil:
   acc: { cycles: 0, sync: 0, cam: 0, pred: 0, beam: 0, beamFail: 0, J: 0, R: 0, L: 0 }, log: [], explore: false };
 const horizonS = () => ttap.H * 0.1;
 
+// Live Grafana dashboard (optional, opt-in): POST each TwinTrust-AP cycle to the
+// Phase 3 backend's /api/v1/telemetry/live so a local Grafana dashboard can show
+// a live driving session. Off by default so the public demo never depends on a
+// backend being reachable. Enable with ?telemetry=1, point at a non-default
+// backend with &telemetryUrl=http://host:port (see backend/README.md in Aegis-V2X).
+const telemQP = new URLSearchParams(location.search);
+const TELEMETRY_CFG = { on: telemQP.get('telemetry') === '1', url: (telemQP.get('telemetryUrl') || 'http://localhost:8000').replace(/\/$/, '') };
+let telT = 0;
+function pushTelemetry(dt) {
+  if (!TELEMETRY_CFG.on || ttap.T === null) return;
+  telT += dt; if (telT < 1) return; telT = 0;
+  fetch(TELEMETRY_CFG.url + '/api/v1/telemetry/live', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ trust: ttap.T, criticality: ttap.C, horizon: horizonS(), action: ttap.action })
+  }).catch(() => {});
+}
+
 // line of sight between two points crosses a building block interior (buildings stand > 11 m from every road centreline)
 function losBlocked(x1, z1, x2, z2) { for (let k = 1; k < 10; k++) { const f = k / 10, x = x1 + (x2 - x1) * f, z = z1 + (z2 - z1) * f; if (Math.abs(near(x)) > 11 && Math.abs(near(z)) > 11) return true } return false }
 
@@ -2650,7 +2667,7 @@ function frame(now){requestAnimationFrame(frame);gfx.booted=true;const dt=Math.m
   simStep(dt);updateLinks();updateRsuLinks();updateRuler();updateCamera(dt);updateAtmosphere(dt);updateWeather(dt);updateSelection();processPointer();if(!window.__noRender)render();perf.fr++;{const nw=performance.now();if(!perf.t0)perf.t0=nw;if(nw-perf.t0>1000){perf.fps=perf.fr*1000/(nw-perf.t0);perf.fr=0;perf.t0=nw}}drawMini();drawGauge(dt);updateAudio();
   densT+=dt;if(densT>1){densT=0;manageDensity()}
   uiT+=dt;if(uiT>.25){uiT=0;computeMetrics();renderTiles();renderTrust();renderHud();renderTrustCard();renderStatus();renderTwinTab();renderTTAP();renderSafety();renderGlance();if(curTab==='overview')renderInspector();$('clock').textContent=new Date().toLocaleTimeString([],{hour12:false});$('sessT').textContent=fmtT((Date.now()-sessStart)/1000)}
-  histT+=dt;if(histT>.5){histT=0;sampleHist();renderLife()}saveT+=dt;if(saveT>2){saveT=0;saveLife()}}
+  histT+=dt;if(histT>.5){histT=0;sampleHist();renderLife()}saveT+=dt;if(saveT>2){saveT=0;saveLife()}pushTelemetry(dt)}
 addEventListener('pagehide',saveLife);
 function togglePause(){paused=!paused;const b=$('pauseBtn');b.textContent=paused?'Resume':'Pause';b.classList.toggle('on',paused);const pt=$('pausedTag');pt.hidden=!paused;pt.textContent=`Paused · sim t ${t.toFixed(1)} s`;
   logEvent('info',paused?'Simulation paused':'Simulation resumed',`sim t ${t.toFixed(2)} s`);renderTrustCard();renderGlance()}
