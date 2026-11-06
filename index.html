@@ -1924,6 +1924,9 @@ const TTAP_CFG = {
   POLICY: {"low": {"low": "synchronize", "medium": "synchronize", "high": "synchronize"}, "medium": {"low": "beam_switch", "medium": "beam_switch", "high": "beam_switch"}, "high": {"low": "increase_horizon", "medium": "increase_horizon", "high": "increase_horizon"}},
   POLICY_SRC: 'b1: synchronize when trust is low, beam switch when it is medium, lengthen the horizon when it is high',
   FIXED: { H: 5, syncEvery: 10 }, // fixed-policy baseline: horizon 5, edge sync every 1 s, prediction always on
+  // literature baseline: age-of-information threshold update policy (Sun et al., "Update or Wait", IEEE Trans. Inf. Theory 2017;
+  // AoI: Kaul, Yates, Gruteser, IEEE INFOCOM 2012). Sync (with beam sweep) when the mean twin information age exceeds thrS.
+  AOI: { H: 5, thrS: 0.8 }, // 0.8 s chosen on the selection seeds (research/README.md section 6); headless mode 'aoi'
   // Joint beam adaptation: in the same cycle as the table's prediction/synchronisation action, switch the
   // beam (alternate path / relay for 2 s) when at least minBlock of the V2V links are blocked by buildings
   // and no switch is active. This makes the decision joint (horizon + sync + beam), as in the paper title.
@@ -1992,7 +1995,7 @@ function ttapEvidence() {
   const u = ttap.errHist.length >= 2 ? clamp(TT.robustSpread(ttap.errHist) / C.E_REF, 0, 1) : (prev.u ?? 0);
   const a = an ? clamp(ageSum / an / C.AGE_REF, 0, 1) : (prev.a ?? 1);
   return { e, u, a, q, meanErr, verified: n, correct: n ? ok / n : null, A: aList.length ? TT.median(aList) : null,
-    cf: { rel: clamp(relMax / C.RELSPD_REF, 0, 1), block: links ? blocked / links : 0, age: a, chan: 1 - q, dens: clamp(dens / C.DENS_REF, 0, 1) }, predicted: pred, links };
+    cf: { rel: clamp(relMax / C.RELSPD_REF, 0, 1), block: links ? blocked / links : 0, age: a, chan: 1 - q, dens: clamp(dens / C.DENS_REF, 0, 1) }, predicted: pred, links, ageMean: an ? ageSum / an : null };
 }
 const sgm = x => 1 / (1 + Math.exp(-x));
 const calibrate = raw => sgm(TTAP_CFG.CAL.a * raw + TTAP_CFG.CAL.b);
@@ -2013,6 +2016,10 @@ function ttapStep() {
   const A = ttap.acc; let syncN = 0, beam = 0, beamFail = 0;
   if (ttap.mode === 'fixed') {
     ttap.H = TTAP_CFG.FIXED.H; ttap.predictOn = true; ttap.action = ttap.cycle % TTAP_CFG.FIXED.syncEvery === 0 ? 'synchronize' : 'predict'; ttap.state = 'fixed';
+    if (ttap.action === 'synchronize') { syncN = edgeSync(); beamSweep(); beam = 1 }
+  } else if (ttap.mode === 'aoi') {
+    const B = TTAP_CFG.AOI; ttap.H = B.H; ttap.predictOn = true; ttap.state = 'aoi';
+    ttap.action = (ev.ageMean === null || ev.ageMean > B.thrS) ? 'synchronize' : 'predict';
     if (ttap.action === 'synchronize') { syncN = edgeSync(); beamSweep(); beam = 1 }
   } else {
     const Tb = binOf(ttap.T, TTAP_CFG.TRUST_BINS), Cb = binOf(ttap.C, TTAP_CFG.CRIT_BINS); ttap.state = `${BINS[Tb]}/${BINS[Cb]}`;

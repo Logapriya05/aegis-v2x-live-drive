@@ -59,6 +59,7 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
 - The TwinTrust-AP formulas are Vaishnavi's Python code (copied unchanged into `research/aegis_ai/`), ported to JavaScript and checked case by case (`research/tests/`). The evidence that feeds them, the calibration and the FSDP table come from **this simulated city**, not from CARLA or real vehicles.
 - The FSDP table was chosen as the lowest-cost table that keeps the twin as accurate as the fixed policy. No candidate met that in every condition; the closest one was chosen.
 - The demo runs table b1 with a simple **mmWave beam model** (12° beams, 20 ms sweeps) and joint beam adaptation. In recorded test runs this cut the J objective by 30% against the fixed policy, with twin correctness 3.5 points lower (51.2% vs 54.7%).
+- A literature baseline (age-of-information threshold updates, Kaul et al. 2012; Sun et al. 2017) and three repeated seed sets were added: J 0.092 (TwinTrust-AP) vs 0.129 (fixed) vs 0.136 (age threshold 0.8 s), with twin correctness about 4 points lower for TwinTrust-AP. Seeded runs are statistically repeatable, not bit-identical. See `research/README.md` sections 6–7.
 - The beam model is a simple geometric mmWave model, not a ray-traced channel (Sionna RT). See `research/README.md`.
 - The weights of the Trust Score's hazard terms and the evidence scales (3 m error, 1 s age, 300 ms latency) are design choices, not fitted values.
 - Weather changes visuals and the reported road friction only. Vehicle dynamics do not change with weather.
