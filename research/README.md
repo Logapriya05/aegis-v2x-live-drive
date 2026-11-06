@@ -70,6 +70,10 @@ for so in 0 2000 4000; do
   SEED_OFF=$so AOI_THR=0.2 python3 pipeline/collect.py ev${so}_aoi02.jsonl aoi
 done
 python3 pipeline/summarize_repeated.py eval_repeated.json ev0 ev2000 ev4000
+# section 8: GRU training tracks (own seeds), then the same exploration / calibration / selection / repeated runs
+python3 pipeline/collect_tracks.py tracks.jsonl 240 6
+python -m ai.gru.train_twin_predictor tracks.jsonl gru_twin.json      # in bossygirl-1818/Aegis-V2X
+MODES=tt,fixed,aoi,aoi02,ttctrv,fixedctrv python3 pipeline/summarize_repeated.py eval_final.json ev0 ev2000 ev4000
 ```
 
 Recorded `.jsonl` files (about 7 MB each) are not committed; the seeds reproduce them.
@@ -240,7 +244,7 @@ Not yet experimentally verified beyond these simulated runs. No CARLA, Sionna RT
 
 Not yet experimentally verified beyond these simulated runs. No CARLA, Sionna RT or hardware results are claimed.
 
-### 6. Literature baseline and repeated runs (2026-11-06) — `results/eval_repeated.json`
+### 6. Literature baseline and repeated runs (2026-11-06, superseded by section 8) — `results/eval_repeated.json`
 
 **Baseline: age-of-information (AoI) threshold updates.** The twin is synchronised (with a beam sweep, like the fixed policy) whenever the mean age of its V2X information exceeds a threshold; horizon 5, prediction always on. Threshold policies are the standard way to keep information fresh in the AoI literature:
 
@@ -309,4 +313,97 @@ Simulation only. Not yet experimentally verified on CARLA, Sionna RT or hardware
 - **Latency:** mean 13.2 µs, median 11.2 µs, p99 32.7 µs, max 172 µs. This is far inside the 100 ms budget of the 10 Hz loop.
 - **Memory:** peak traced Python allocation of 8.5 KiB over 1,000 cycles.
 - **Scope:** decision logic only. It excludes perception and the digital-twin update, and it was not measured on a Jetson Orin (future work). Re-run it on the target machine before quoting it for that machine.
+
+### 8. Final configuration: 3GPP mmWave channel + GRU twin predictor (2026-11-06) — `results/eval_final.json`
+
+Three changes, then the whole pipeline (calibration, selection, repeated runs) was run again. **These are the numbers to report; sections 5–6 are superseded.**
+
+**1. 3GPP mmWave V2V channel** (replaces the distance/blockage heuristic for V2V links; `v2vChannel` in `index.html`):
+
+- **Path loss:** 3GPP TR 37.885 V2V urban, as implemented in ns-3 `ThreeGppV2vUrbanPropagationLossModel`.
+  - LOS and NLOSv: 38.77 + 16.7 log10 d + 18.2 log10 fc.
+  - NLOS: 36.85 + 30 log10 d + 18.9 log10 fc.
+- **Vehicle blockage (NLOSv):** lognormal extra loss, mean 5 dB (car) or 9 dB (bus/truck) + max(0, 15 log10 d − 41) dB.
+- **Shadowing:** 3 dB (LOS, NLOSv) or 4 dB (NLOS), correlated over 10 m.
+- **Link state:** from the simulated geometry.
+  - NLOS if a building cuts the line of sight.
+  - NLOSv if a vehicle is within 1.2 m of it.
+  - Otherwise LOS.
+- **Beam gain:** 3GPP TR 38.901 element pattern −min(12 (θ/12°)², 30 dB), θ = drift since the last beam sweep.
+- **Link budget** (design choices, not measured): 30 GHz, 23 dBm, 10 dBi per side, 400 MHz, noise figure 9 dB, packet error 1/(1 + e^((SNR − 3 dB)/0.8)).
+- **Beam switch:** for 2 s, NLOS links use a reflected path (LOS path loss + 10 dB).
+- **Effect** (measured on one run): NLOS links lose about 95% of packets (median SNR −7 dB), LOS links almost none (median 26 dB).
+
+**2. GRU twin motion predictor** (`GRU_W` and `gruForward` in `index.html`; `TTAP_CFG.PRED`):
+
+- **Model:** Vaishnavi's `GRUPredictor` architecture (`ai/gru/model.py`), profile `perception.gru_twin` (hidden 32, 1 layer).
+- **Training:** by `ai/gru/train_twin_predictor.py` on 6 × 240 s of tracks from `pipeline/collect_tracks.py`, recorded with their own seeds.
+- **Inputs and outputs:** the last 8 received messages of a vehicle → displacement at horizons 1, 2, 3, 5, 8, 10 × 0.1 s.
+- **Port check:** the JavaScript forward pass matches PyTorch to 5 × 10⁻⁶ m.
+- **Design note:** all six horizons are predicted in one pass. `GRUPredictor` adds the horizon embedding before a linear head, so on its own the embedding only shifts the output by a constant per horizon. Trained that way, the errors at horizons 1 and 10 were 2–3 times the dead-reckoning error.
+- **Offline test** (`results/gru_offline_eval.json`, held-out run, 20% message loss, 0.4 m position noise):
+
+  | Horizon | GRU mean error | CTRV (dead reckoning) | GRU within 1 m | CTRV within 1 m |
+  |---|---:|---:|---:|---:|
+  | 0.1 s | 0.19 m | 0.50 m | 100.0% | 95.4% |
+  | 0.5 s | 0.21 m | 0.55 m | 99.4% | 93.0% |
+  | 1.0 s | 0.37 m | 0.83 m | 96.2% | 77.2% |
+
+**3. Twin correctness measured on the twin's estimate.**
+
+- **Before:** "twin correct" (the calibration target and R in J) was measured on the drawn twin object. That object is smoothed for display and evaluated one 0.05 s step late, about 0.5–1 m of artificial error at 10 m/s.
+- **Now:** it is measured on the twin's position estimate at the same instant (`twinEstimate`).
+- **Size of the change, on one seeded run (fixed policy):** vehicle twin correctness went from 61% (drawn object) to 99.1% (GRU estimate), against 95.6% for the CTRV estimate.
+- **Also recorded:** vehicle-only correctness (`correctV2V`) and error (`meanErrV2V`), because R also includes pedestrians, whose V2X position noise is 2 m.
+
+**Re-fitted calibration** (`results/calibration.json`): a = 4.399, b = 1.142; held-out ECE 0.162 → 0.031.
+
+**Selection** (`results/policy_search_3gpp_gru.json`, selection seeds, 90 s per condition):
+
+| Policy | J | Twin correct (all) | Syncs/s |
+|---|---:|---:|---:|
+| Fixed | 0.142 | 60.7% | 46.7 |
+| b1 | 0.081 | 54.6% | 23.9 |
+| b2 | 0.085 | 54.4% | 26.8 |
+| b3 | 0.077 | 54.3% | 14.5 |
+| c9 | 0.196 | 59.0% | 68.4 |
+| AoI 0.2 s | 0.222 | 74.7% | 293.8 |
+| AoI 0.35 s | 0.176 | 69.9% | 195.4 |
+| AoI 0.5 s | 0.144 | 68.4% | 120.8 |
+| AoI 0.8 s | 0.159 | 61.5% | 64.9 |
+
+- **Table:** no trust-driven table meets the accuracy rule, so **b1 is kept** (b1–b3 are within run-to-run noise of each other).
+- **AoI baseline:** the threshold with the lowest J, **0.5 s**, is the main AoI baseline. It also meets the accuracy rule.
+
+**Repeated runs** (3 seed sets × 8 conditions × 150 s; 95% CIs by Student's t over the sets):
+
+| Policy (GRU predictor) | J | Vehicle twin correct | Vehicle error | Syncs/s | Energy E | Info age L | Overhead O |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **TwinTrust-AP (b1)** | **0.083** | 78.6% | 0.83 m | **30.6** | **0.249** | 0.418 | **0.068** |
+| Fixed (H 5, sync + sweep every 1 s) | 0.139 | 85.8% | 0.68 m | 44.5 | 0.372 | 0.558 | 0.100 |
+| AoI threshold 0.5 s | 0.142 | 88.5% | 0.58 m | 116.0 | 0.456 | 0.405 | 0.257 |
+| AoI threshold 0.2 s | 0.209 | 88.7% | 0.58 m | 278.9 | 0.658 | 0.262 | 0.623 |
+
+| TwinTrust-AP − other | ΔJ | Δ vehicle twin correct | Δ syncs/s | Δ energy E |
+|---|---|---|---|---|
+| vs fixed | −0.055 [−0.076, −0.034] | −7.2 points [−8.4, −5.9] | −13.9 [−27.6, −0.1] | −0.122 [−0.147, −0.098] |
+| vs AoI 0.5 s | −0.058 [−0.081, −0.036] | −9.8 points [−13.9, −5.8] | −85.4 [−98.3, −72.4] | −0.206 [−0.226, −0.187] |
+
+**GRU vs dead reckoning, in the loop** (same seeds; `PRED=ctrv`):
+
+| Policy | Vehicle twin correct GRU / CTRV | Vehicle error GRU / CTRV | Δ error [95% CI] |
+|---|---:|---:|---|
+| TwinTrust-AP | 78.6% / 77.0% | 0.83 / 0.92 m | −0.085 m [−0.168, −0.003] |
+| Fixed | 85.8% / 83.8% | 0.68 / 0.78 m | −0.097 m [−0.261, +0.067] |
+
+**How to read this:**
+
+- **Cost.** TwinTrust-AP lowers J by 40% against the fixed policy and by 41% against the AoI baseline. Both intervals exclude 0.
+- **Resources.** It sends 31% fewer synchronisations than the fixed policy (30.6 vs 44.5 per second; the interval just excludes 0) and 74% fewer than AoI 0.5 s. Modelled energy is 33% lower than fixed and 45% lower than AoI 0.5 s. Information age is 25% lower than fixed and about equal to AoI 0.5 s. It sweeps beams more often (4.1 vs 1.0 per second).
+- **Accuracy.** The twin is correct 7 points less often than with the fixed policy and 10 points less than AoI 0.5 s. **The accuracy rule is not met.** This is the price of the lower cost.
+- **GRU.** Offline it cuts the prediction error by 55–62%. In the loop the vehicle error falls by about 0.09 m for both policies; that interval excludes 0 only for TwinTrust-AP. The correctness gain (+1.6 and +2.0 points) is within noise. In the loop the error is dominated by information that arrives late or not at all (NLOS links, latency, the horizon cap), not by the predictor.
+- **Where TwinTrust-AP loses.** Under latency and loss + latency its accuracy drops most (61% vs 70% and 62% vs 76% overall). This is the known short-horizon-under-delay limitation.
+- **Low LiDAR accuracy.** Correctness is about 8% for every policy under LiDAR degradation, because the reference sensor's 2.2 m noise fails the 1 m test.
+
+Simulation only. 3GPP channel models, not a ray-traced (Sionna RT) or measured channel. Not yet experimentally verified beyond these runs.
 
