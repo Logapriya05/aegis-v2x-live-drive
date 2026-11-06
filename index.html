@@ -624,14 +624,15 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Resource use</h3><span class="sub" id="ttAccSub">since the last mode switch</span><button type="button" class="ttreset" id="ttReset">Reset</button></header>
             <div class="stats ttacc" id="ttAcc"></div>
             <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded test runs (3 seed sets × 8 conditions × 150 s, 3GPP channel at 30 GHz, GRU predictor), TwinTrust-AP cut J by 40% against the fixed policy (0.083 vs 0.139) and by 41% against an age-of-information baseline (0.142). It used 31% fewer syncs (30.6 vs 44.5 per second) and 33% less modelled energy, but the vehicle twin was correct 7 points less often (78.6% vs 85.8%). J stays lowest at 15 and 100 GHz (−45% and −16%). Details in research/README.md.</p></article>
-          <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Recorded results</h3><span class="sub">3 seed sets × 8 conditions × 150 s per policy</span></header>
+          <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Recorded results</h3><span class="sub">3 seed sets × 8 conditions × 150 s per policy · trust calibration error 0.04–0.05 on these runs</span></header>
             <div class="ttres" style="overflow-x:auto"><table class="ttpol"><thead><tr><th>Band</th><th>Policy</th><th>J ↓</th><th>Syncs/s</th><th>Twin correct</th></tr></thead><tbody>
-            <tr><th rowspan="3">15 GHz</th><td><b>TwinTrust-AP</b></td><td><b>0.072</b></td><td>23.2</td><td>79.9%</td></tr><tr><td>Fixed policy</td><td>0.132</td><td>44.4</td><td>87.5%</td></tr><tr><td>Age-of-information 0.5 s</td><td>0.139</td><td>113.7</td><td>89.0%</td></tr>
-            <tr><th rowspan="3">30 GHz</th><td><b>TwinTrust-AP</b></td><td><b>0.083</b></td><td>30.6</td><td>78.6%</td></tr><tr><td>Fixed policy</td><td>0.139</td><td>44.5</td><td>85.8%</td></tr><tr><td>Age-of-information 0.5 s</td><td>0.142</td><td>116.0</td><td>88.5%</td></tr>
-            <tr><th rowspan="3">100 GHz</th><td><b>TwinTrust-AP</b></td><td><b>0.122</b></td><td>46.0</td><td>77.4%</td></tr><tr><td>Fixed policy</td><td>0.145</td><td>44.7</td><td>82.3%</td></tr><tr><td>Age-of-information 0.5 s</td><td>0.147</td><td>119.3</td><td>86.4%</td></tr>
+            <tr><th rowspan="3">15 GHz</th><td><b>TwinTrust-AP</b></td><td><b>0.055</b></td><td><b>16.0</b></td><td><b>89.0%</b></td></tr><tr><td>Fixed policy</td><td>0.132</td><td>44.4</td><td>87.5%</td></tr><tr><td>Age-of-information 0.5 s</td><td>0.139</td><td>113.7</td><td>89.0%</td></tr>
+            <tr><th rowspan="3">30 GHz</th><td><b>TwinTrust-AP</b></td><td><b>0.056</b></td><td><b>17.9</b></td><td><b>88.2%</b></td></tr><tr><td>Fixed policy</td><td>0.139</td><td>44.5</td><td>85.8%</td></tr><tr><td>Age-of-information 0.5 s</td><td>0.142</td><td>116.0</td><td>88.5%</td></tr>
+            <tr><th rowspan="3">100 GHz</th><td><b>TwinTrust-AP</b></td><td><b>0.101</b></td><td><b>28.4</b></td><td><b>88.4%</b></td></tr><tr><td>Fixed policy</td><td>0.145</td><td>44.7</td><td>82.3%</td></tr><tr><td>Age-of-information 0.5 s</td><td>0.147</td><td>119.3</td><td>86.4%</td></tr>
             </tbody></table></div>
-            <p class="fine"><b>Cost.</b> TwinTrust-AP has the lowest J in every band: 45%, 40% and 16% below the fixed policy (95% confidence intervals exclude 0). At 30 GHz it uses 31% fewer syncs and 33% less modelled energy. At 100 GHz the sync saving disappears.</p>
-            <p class="fine"><b>Trade-off.</b> Its twin is less accurate: correct 7 points less often than with the fixed policy at 30 GHz (78.6% vs 85.8%), and 5 to 8 points less in the other bands. The gap is mostly under +300 ms latency (72.8% vs 97.1%) and loss + latency (54.4% vs 83.6%), where it picks prediction horizons too short to bridge the delay; in the other conditions it is within 3 points or better. "Twin correct" is vehicles within 1 m of their true position. Lower cost comes at some twin accuracy.</p>
+            <p class="fine"><b>Cost.</b> TwinTrust-AP has the lowest J in every band: 58%, 60% and 30% below the fixed policy, with 64%, 60% and 36% fewer twin synchronisations (95% confidence intervals exclude 0). At 30 GHz it uses 43% less modelled energy.</p>
+            <p class="fine"><b>Accuracy.</b> The lower cost does not cost twin accuracy: vehicles are correct as often as with the age-of-information baseline (more often at 100 GHz), which syncs 4 to 7 times more, and more often than with the fixed policy (+1.6, +2.4 and +6.2 points; the 30 GHz difference is within the confidence interval). "Twin correct" is vehicles within 1 m of their true position.</p>
+            <p class="fine"><b>Mechanisms.</b> Age bridging keeps prediction on and the horizon at least as long as the information age (it raised twin correctness by 7.8 points under the same table). Twin-aided beam tracking steers each beam to the twin's predicted vehicle position between sweeps (+1.1 points). The earlier version without them was correct 78.6% of the time at 30 GHz and lost up to 29 points under latency.</p>
             <p class="fine">Browser simulation only: 3GPP statistical channel, not ray-traced (Sionna RT) or measured. Age-of-information baseline: Kaul, Yates, Gruteser (INFOCOM 2012); Sun et al. (IEEE Trans. Inf. Theory 2017). Details in research/README.md.</p></article>
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Trust calibration</h3><span class="sub">Platt scaling, held-out cycles</span></header>
             <div class="stats" id="ttCal"></div>
@@ -1968,6 +1969,8 @@ const TTAP_CFG = {
   FIXED: { H: 5, syncEvery: 10 }, // fixed-policy baseline: horizon 5, edge sync every 1 s, prediction always on
   // literature baseline: age-of-information threshold update policy (Sun et al., "Update or Wait", IEEE Trans. Inf. Theory 2017;
   // AoI: Kaul, Yates, Gruteser, IEEE INFOCOM 2012). Sync (with beam sweep) when the mean twin information age exceeds thrS.
+  AGE_FLOOR: true, // TwinTrust-AP age bridging: prediction always on, horizon >= mean information age (headless env AGE_FLOOR=0 for the ablation)
+  DT_BEAM: true,   // TwinTrust-AP: twin-aided beam tracking between sweeps (headless env DT_BEAM=0 for the ablation)
   AOI: { H: 5, thrS: 0.5 }, // 0.5 s: lowest J of the thresholds tried (research/README.md section 8); headless mode 'aoi' (collect.py sets AOI_THR)
   // Joint beam adaptation: in the same cycle as the table's prediction/synchronisation action, switch the
   // beam (alternate path / relay for 2 s) when at least minBlock of the V2V links are blocked by buildings
@@ -2107,16 +2110,25 @@ function ttapStep() {
     const disc = TTAP_CFG.TAHS.disc; const base = disc.indexOf(TT.selectHorizon(ttap.T, ttap.C, ttap.A, TTAP_CFG.TAHS));
     if (act === 'reduce_horizon') ttap.hIdxOff = Math.max(-2, ttap.hIdxOff - 1); else if (act === 'increase_horizon') ttap.hIdxOff = Math.min(2, ttap.hIdxOff + 1);
     ttap.H = disc[clamp(base + ttap.hIdxOff, 0, disc.length - 1)];
+    if (TTAP_CFG.AGE_FLOOR && ev.ageMean !== null) { const need = Math.ceil(ev.ageMean / 0.1 - 1e-9), f = disc.find(h => h >= need) ?? disc[disc.length - 1]; ttap.floored = ttap.H < f; if (ttap.floored) ttap.H = f } else ttap.floored = false;
     if (act === 'synchronize') syncN = edgeSync();
     if (act === 'predict' || act === 'reduce_horizon' || act === 'increase_horizon') ttap.predictOn = true;
     else if (act === 'synchronize') ttap.predictOn = false;
+    // age bridging: prediction stays on (a beam switch or sync must not leave the twin extrapolating only 0.2 s
+    // while its V2X information is older), and the horizon is at least the mean information age
+    if (TTAP_CFG.AGE_FLOOR) ttap.predictOn = true;
     if (act === 'beam_switch') { beam = 1; const sw = beamSweep(); if (ev.cf.block < .05 && sw.mis === 0) beamFail = 1; else ttap.relayUntil = t + 2 } // a sweep with no misaligned or blocked link achieves nothing
+    // twin-aided beam tracking (6G digital-twin beam management): between sweeps, steer each tracked beam
+    // to the twin's predicted position of that vehicle instead of leaving it at the last sweep's bearing
+    if (TTAP_CFG.DT_BEAM) for (const [id] of ttap.beams) { const tw = twin.get(id); if (tw && tw.kind === 'V2V' && tw.src === 'v2x' && !(trustDB.get(id) || {}).isolated) ttap.beams.set(id, bearingTo(twinEstimate(tw))) }
     const JB = TTAP_CFG.JOINT_BEAM;
     if (JB.on && act !== 'beam_switch' && ev.cf.block >= JB.minBlock && t >= ttap.relayUntil) { beam = 1; ttap.relayUntil = t + JB.holdS; ttap.jointBeam = true } else ttap.jointBeam = false;
   }
   // cost accounting for J (per cycle, each term normalised to ~[0,1])
+  // prediction cost: CTRV rolls out step by step (cost ~ H); the GRU predicts all horizons in one pass, so its cost is
+  // charged at the fixed policy's H = 5 whatever H is (the fixed and age-of-information baselines use H = 5: unchanged)
   const nObj = Math.max(1, ev.links + 1), predN = ttap.predictOn ? ev.predicted : 0;
-  const L = clamp(ev.a, 0, 1), E = clamp((syncN + .05 * predN * ttap.H + 2 * beam) / (nObj * 1.5), 0, 1), O = clamp(syncN / nObj, 0, 1), F = beamFail, Rl = ev.correct ?? 1;
+  const L = clamp(ev.a, 0, 1), E = clamp((syncN + .05 * predN * (TTAP_CFG.PRED === 'gru' ? TTAP_CFG.FIXED.H : ttap.H) + 2 * beam) / (nObj * 1.5), 0, 1), O = clamp(syncN / nObj, 0, 1), F = beamFail, Rl = ev.correct ?? 1;
   const W = TTAP_CFG.J_W, J = W.L * L + W.E * E + W.O * O + W.F * F - W.R * Rl;
   A.cycles++; A.sync += 0; A.pred += predN; A.beam += beam; A.beamFail += beamFail; A.J += J; A.R += Rl; A.L += L;
   ttap.last = { t, state: ttap.state, action: ttap.action, H: ttap.H, T: ttap.T, Tunc: ttap.Tunc, C: ttap.C, A: ttap.A, e: ev.e, u: ev.u, a: ev.a, q: ev.q, cf: ev.cf, correct: ev.correct, meanErr: ev.meanErr, correctV2V: ev.correctV2V, meanErrV2V: ev.meanErrV2V, J, L, E, O, F, R: Rl, syncN, beam, block: ev.cf.block, jointBeam: !!ttap.jointBeam };
@@ -2244,7 +2256,7 @@ function renderTTAP(force){if(curTab!=='ttap'&&!force)return;const L=ttap.last;c
   const P=TTAP_CFG.POLICY;let tb='<thead><tr><th>Trust ＼ Criticality</th><th>Low</th><th>Medium</th><th>High</th></tr></thead><tbody>';
   for(const T of['high','medium','low']){tb+=`<tr><th>${T[0].toUpperCase()+T.slice(1)}</th>`;for(const C of BINS){const k=`${T}/${C}`;tb+=`<td class="${!fx&&!ao&&L.state===k?'cur':''}">${P?ACT_LABEL[P[T][C]]:'—'}</td>`}tb+='</tr>'}
   $('ttPol').innerHTML=tb+'</tbody>';
-  $('ttPolNote').textContent=fx?'Fixed policy is active: the table is not used. Horizon 5 and an edge synchronisation every 1 s, whatever the trust and criticality.':ao?'Age-of-information baseline is active: the table is not used. Horizon 5; the twin synchronises (with a beam sweep) whenever the mean age of its V2X information exceeds 0.5 s.':'Highlighted: the current state. Bins: trust low < 0.4 ≤ medium < 0.6 ≤ high; criticality in thirds. The table was chosen by running whole candidate tables in this simulation: lowest J among tables whose twin is at least as accurate as the fixed policy\'s. None met that; this one had the lowest J. In test runs (3GPP channel, GRU predictor) it cut J by 40% against the fixed policy (0.083 vs 0.139), with the vehicle twin correct 7 points less often (78.6% vs 85.8%).';
+  $('ttPolNote').textContent=fx?'Fixed policy is active: the table is not used. Horizon 5 and an edge synchronisation every 1 s, whatever the trust and criticality.':ao?'Age-of-information baseline is active: the table is not used. Horizon 5; the twin synchronises (with a beam sweep) whenever the mean age of its V2X information exceeds 0.5 s.':'Highlighted: the current state. Bins: trust low < 0.4 ≤ medium < 0.6 ≤ high; criticality in thirds. The table was chosen by running whole candidate tables in this simulation: lowest J among tables whose twin is at least as accurate as the fixed policy\'s. None met that; this one had the lowest J. With age bridging and twin-aided beam tracking, test runs at 30 GHz (3GPP channel, GRU predictor) cut J by 60% against the fixed policy (0.056 vs 0.139) with 60% fewer syncs, and the vehicle twin was correct as often (88.2% vs 85.8%).';
   const A=ttap.acc,n=Math.max(1,A.cycles),sec=A.cycles/10;
   $('ttAccSub').textContent=`last ${sec.toFixed(0)} s · ${fx?'fixed policy':ao?'age-of-information baseline':'TwinTrust-AP'} · ${CH.FC} GHz`;
   $('ttAcc').innerHTML=`<div><small>Edge syncs / s</small><b>${(A.sync/Math.max(.1,sec)).toFixed(1)}</b></div><div><small>Mean info age</small><b>${(A.L/n*TTAP_CFG.AGE_REF*1000).toFixed(0)} ms</b></div>
