@@ -1,13 +1,13 @@
 {
- "a": 3.303141462160305,
- "b": 0.659756591983696,
+ "a": 4.398645468120582,
+ "b": 1.1421320450667993,
  "fitted": true,
  "source": "Platt scaling on 8000 recorded cycles (8 conditions), tested on 3992 held-out cycles",
  "target": "probability that a twin object is within 1.0 m of the LiDAR-observed position on the next cycle",
- "ece_uncalibrated": 0.1288,
- "ece_calibrated": 0.0419,
- "nll_uncalibrated": 0.6925,
- "nll_calibrated": 0.6478,
+ "ece_uncalibrated": 0.1624,
+ "ece_calibrated": 0.0311,
+ "nll_uncalibrated": 0.6981,
+ "nll_calibrated": 0.63,
  "reliability_uncalibrated": [
   [
    0,
@@ -19,16 +19,16 @@
   [
    0.2,
    0.4,
-   568,
-   0.3833,
-   0.4478
+   546,
+   0.3809,
+   0.4548
   ],
   [
    0.4,
    0.6,
-   3424,
-   0.4665,
-   0.6059
+   3446,
+   0.469,
+   0.6454
   ],
   [
    0.6,
@@ -49,41 +49,41 @@
   [
    0,
    0.2,
-   0,
-   null,
-   null
+   1,
+   0.1919,
+   0.5
   ],
   [
    0.2,
    0.4,
-   582,
-   0.3567,
-   0.447
+   394,
+   0.3443,
+   0.4626
   ],
   [
    0.4,
    0.6,
-   1651,
-   0.4821,
-   0.4937
+   1214,
+   0.494,
+   0.4529
   ],
   [
    0.6,
    0.8,
-   1759,
-   0.6585,
-   0.7127
+   2146,
+   0.7194,
+   0.7265
   ],
   [
    0.8,
    1,
-   0,
-   null,
-   null
+   237,
+   0.8142,
+   0.7629
   ]
  ],
  "T_range_test": [
-  0.222,
-  0.723
+  0.192,
+  0.842
  ]
 }
