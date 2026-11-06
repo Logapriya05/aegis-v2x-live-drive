@@ -1,4 +1,4 @@
-"""Record TwinTrust-AP cycles from the live demo, headless and seeded (reproducible).
+"""Record TwinTrust-AP cycles from the live demo, headless and seeded (statistically repeatable, not bit-identical; see research/README.md).
 
 usage: collect.py OUT.jsonl MODE [CAL_JSON] [POLICY_JSON] [SECONDS]
   Seeds: Math.random is replaced by a seeded generator per condition (SEED_OFF env adds an offset, used for a second batch).
@@ -6,6 +6,7 @@ usage: collect.py OUT.jsonl MODE [CAL_JSON] [POLICY_JSON] [SECONDS]
          twintrust : TwinTrust-AP with the given calibration and policy table
          fixed     : fixed-policy baseline (horizon 5, edge sync every 1 s)
          aoi       : age-of-information threshold baseline (horizon 5, sync when mean age > AOI_THR s, env, default 0.8)
+  PRED env: twin motion predictor, 'gru' (default) or 'ctrv' (dead reckoning, for the ablation).
 """
 import asyncio, json, os, sys
 from playwright.async_api import async_playwright
@@ -30,12 +31,12 @@ async def run(out, mode, cal, pol, secs, conds):
                 async def ex(r): await r.fulfill(path=THREE + '/examples/js/' + r.request.url.split('examples/js/')[1])
                 await pg.route('**/examples/js/**', ex); await pg.route('**/fonts.googleapis.com/**', lambda r: r.abort())
             await pg.goto(PAGE); await pg.wait_for_timeout(2500)
-            recs = await pg.evaluate("""([mode,cal,pol,faults,spd,secs,aoiThr])=>{const A=__aegis;window.__noRender=true;document.getElementById('start').hidden=true;
+            recs = await pg.evaluate("""([mode,cal,pol,faults,spd,secs,aoiThr,pred])=>{const A=__aegis;A.TTAP_CFG.PRED=pred;window.__noRender=true;document.getElementById('start').hidden=true;
               if(cal)Object.assign(A.TTAP_CFG.CAL,cal);if(pol){A.TTAP_CFG.POLICY=pol.policy}
               A.ttap.mode=(mode==='fixed'||mode==='aoi')?mode:'twintrust';if(mode==='aoi')A.TTAP_CFG.AOI.thrS=aoiThr;A.ttap.explore=mode==='explore';
               A.fastForward(3,null);for(const f of faults)A.toggleFault(f);
               const auto=()=>{const k=A.keys,v=A.ego.v,c=A.crit;k.down=c.ttc<2.5&&v>2;k.up=!k.down&&v<spd};
-              window.__ttapRecord=[];A.fastForward(secs,auto);const r=window.__ttapRecord;window.__ttapRecord=null;return r}""", [mode, cal, pol, faults, spd, secs, float(os.environ.get('AOI_THR', '0.8'))])
+              window.__ttapRecord=[];A.fastForward(secs,auto);const r=window.__ttapRecord;window.__ttapRecord=null;return r}""", [mode, cal, pol, faults, spd, secs, float(os.environ.get('AOI_THR', '0.8')), os.environ.get('PRED', 'gru')])
             for i, r in enumerate(recs):
                 r['cond'] = name; r['i'] = i; f.write(json.dumps(r) + '\n')
             summary.append((name, len(recs), errs[:1])); await ctx.close()
