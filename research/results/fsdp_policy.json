@@ -6,9 +6,9 @@
    "high": "synchronize"
   },
   "medium": {
-   "low": "increase_horizon",
-   "medium": "increase_horizon",
-   "high": "increase_horizon"
+   "low": "beam_switch",
+   "medium": "beam_switch",
+   "high": "beam_switch"
   },
   "high": {
    "low": "increase_horizon",
@@ -16,7 +16,8 @@
    "high": "increase_horizon"
   }
  },
- "name": "c9",
- "rule": "synchronize when trust is low, otherwise increase the prediction horizon",
- "selected_by": "research/pipeline/select_policy.py (see results/policy_search.json)"
+ "name": "b1",
+ "rule": "synchronize when trust is low, beam switch when it is medium, increase the prediction horizon when it is high",
+ "runs_with": "JOINT_BEAM and the mmWave beam model",
+ "selected_by": "research/pipeline/select_policy.py (see results/policy_search_beam.json)"
 }

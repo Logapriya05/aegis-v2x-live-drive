@@ -78,7 +78,7 @@ Recorded `.jsonl` files (about 7 MB each) are not committed; the seeds reproduce
 
 Calibrated T ranges over about 0.22–0.72 on the test data. It does not reach 1, because in this simulation the twin is right only about 60–70% of the time even in good conditions.
 
-### 2. FSDP policy table — `results/fsdp_policy.json`
+### 2. FSDP policy table (first version, c9) — `results/fsdp_policy_c9.json`
 
 **Objective, decided 2026-11-04:** minimise J = 0.25L + 0.20E + 0.20O + 0.20F − 0.15R (`configs/model.yaml`), but only among tables whose twin correctness R is at least the fixed policy's, overall and in every condition (tolerance 0.01).
 
@@ -116,7 +116,7 @@ What made the difference, seen in the runs:
 
 **Decision (2026-11-04):** use c9, the closest, and report the conditions where it misses the rule.
 
-### 3. c9 vs fixed policy on the evaluation seeds — `results/eval_summary.json`
+### 3. c9 vs fixed policy on the evaluation seeds — `results/eval_summary_c9.json`
 
 - **Seeds:** the same per condition for both modes, 150 s per condition. Traffic diverges once actions differ, so these are two runs of the same scenario, not a cycle-by-cycle pairing.
 - **Confidence intervals:** block bootstrap over 10 s blocks.
@@ -145,11 +145,88 @@ What made the difference, seen in the runs:
 - **The weak conditions change with the seeds.** On the selection seeds they were spoofing and slow dense traffic; here they are latency and normal driving. So per-condition differences of a few points are within run-to-run variation at 90–150 s per condition. Longer or repeated runs are needed before reporting any per-condition claim.
 - **Reference noise:** "Twin correct" uses LiDAR as the reference. Under LiDAR degradation (σ = 2.2 m) the reference itself is too noisy for a 1 m threshold, so that row says little about the twin.
 
+### 4. c9 + joint beam adaptation (superseded by section 5) — `results/eval_summary_joint_beam.json`
+
+The demo ships c9 together with **joint beam adaptation**: in the same cycle as the table's action, the beam is switched (alternate path / relay, held 2 s) whenever at least 5% of V2V links are blocked by buildings. Prediction horizon, synchronisation and beam are therefore decided together in every cycle.
+
+**The beam model is abstract.** A switch cuts the extra loss on blocked links from 30% to 6%. It is not ray-traced and has no mmWave/THz beam physics.
+
+Evaluation seeds, 150 s per condition, against the same fixed-policy runs:
+
+| Condition | J joint | J fixed | ΔJ [95% CI] | Twin correct joint / fixed | Syncs/s joint / fixed |
+|---|---:|---:|---|---:|---:|
+| normal | 0.024 | 0.074 | −0.050 [−0.063, −0.038] | 57.3% / 62.7% | 0.0 / 44.1 |
+| normal_fast | 0.005 | 0.066 | −0.061 [−0.074, −0.048] | 60.2% / 62.0% | 0.0 / 43.2 |
+| loss | 0.187 | 0.184 | +0.003 [−0.020, 0.024] | 51.8% / 61.9% | 22.0 / 49.0 |
+| latency | 0.203 | 0.163 | +0.040 [−0.004, 0.078] | 70.3% / 72.7% | 55.8 / 41.0 |
+| lidar_degraded | 0.172 | 0.148 | +0.023 [0.013, 0.035] | 8.1% / 8.6% | 54.5 / 39.1 |
+| spoof | −0.011 | 0.076 | −0.087 [−0.104, −0.068] | 61.5% / 62.4% | 0.0 / 44.5 |
+| loss_latency | 0.304 | 0.238 | +0.066 [0.056, 0.077] | 65.5% / 65.6% | 163.5 / 47.6 |
+| slow_dense | 0.008 | 0.078 | −0.070 [−0.083, −0.059] | 54.9% / 56.8% | 0.0 / 47.9 |
+| **Overall** | **0.111** | **0.128** | **−0.017 [−0.040, 0.006]** | **53.7% / 56.6%** | **37.0 / 44.5** |
+
+**How to read this:**
+
+- **Fewer synchronisations:** 17% fewer edge synchronisations than the fixed policy (37.0 vs 44.5 per second).
+- **Cost:** lower J overall, but the difference is not statistically significant.
+- **Accuracy:** about 3 points lower twin correctness (53.7% vs 56.6%), mostly under packet loss (51.8% vs 61.9%). So the accuracy constraint is not met.
+- **Beam switching:** in this city layout at least 5% of links are almost always blocked, so the beam was switched every 2 s (0.49 per second) in every condition. In practice it acted like an always-on relay rather than a condition-dependent choice. A finer beam model (per-link beams, ray-traced blockage) is needed for beam adaptation to show condition-specific behaviour.
+- **Beam failures:** 0.
+
 **What a fair claim from this simulation would be:** trust-driven control can match the fixed policy's twin accuracy while moving synchronisation to where the link is degraded. It does **not**, in this setup, reduce total resource use under the accuracy rule.
 
 **What would strengthen it:**
 - Trust evidence that reacts to spoofing and dense traffic, for example GDCA authority or V2X consistency.
 - A TAHS horizon that does not shrink when information is stale.
 - Longer, repeated evaluation runs.
+
+Not yet experimentally verified beyond these simulated runs. No CARLA, Sionna RT or hardware results are claimed.
+
+
+### 5. Final configuration: mmWave beam model + table b1 — `results/eval_summary.json`
+
+**Beam model (added 2026-11-06).** The earlier blockage/relay model made beam switching nearly useless, so a simple mmWave model was added for V2V links. The values are design choices for an FR2 link, not measured:
+
+- **Alignment.** Each link keeps the bearing its beam was last aligned to. As vehicles move, the bearing drifts.
+- **Loss.** Beyond half the 12° beamwidth, packet loss rises by up to 70%.
+- **Degraded links.** Misaligned links count as degraded in the criticality blockage feature.
+- **Beam switch.** It re-sweeps every link, with a 20 ms outage.
+- **Fixed policy.** It sweeps every 1 s, together with its sync.
+- **Joint beam switch.** The automatic switch from section 4 (`JOINT_BEAM`) stays on.
+
+**Selection** (`results/policy_search_beam.json`, selection seeds, 90 s per condition):
+
+| Candidate | Rule | J | Twin correct | Syncs/s |
+|---|---|---:|---:|---:|
+| Fixed policy | horizon 5, sync + beam sweep every 1 s | 0.130 | 0.546 | 47.2 |
+| c9 | sync when trust is low, else increase horizon | 0.198 | 0.500 | 85.4 |
+| b1 | sync when trust is low, beam switch when medium, increase horizon when high | 0.092 | 0.505 | 40.9 |
+| b2 | as b1, beam switch only at medium trust with criticality ≥ medium | 0.099 | 0.496 | 45.4 |
+| b3 | sync when trust is low, beam switch at high criticality or medium/medium | 0.095 | 0.497 | 42.7 |
+
+- **Without beam switching (c9):** misaligned links pile up, trust drops, and the table floods synchronisation.
+- **With beam switching (b1–b3):** J is about 30% below the fixed policy's, but twin correctness is 4–5 points lower. **No candidate met the accuracy rule.**
+- **Choice:** b1 had the lowest J and the highest accuracy of the beam-aware tables.
+
+**b1 vs fixed policy, evaluation seeds** (150 s per condition):
+
+| Condition | J b1 | J fixed | ΔJ [95% CI] | Twin correct b1 / fixed | Syncs/s b1 / fixed |
+|---|---:|---:|---|---:|---:|
+| normal | 0.027 | 0.070 | -0.043 [-0.053, -0.033] | 53.9% / 60.6% | 0.0 / 47.1 |
+| normal_fast | -0.005 | 0.068 | -0.073 [-0.084, -0.062] | 59.9% / 64.5% | 0.0 / 42.7 |
+| loss | 0.117 | 0.183 | -0.066 [-0.076, -0.057] | 51.4% / 57.4% | 34.2 / 52.5 |
+| latency | 0.174 | 0.168 | +0.007 [-0.011, +0.026] | 63.1% / 65.3% | 89.4 / 43.0 |
+| lidar_degraded | 0.133 | 0.148 | -0.015 [-0.029, -0.000] | 7.4% / 7.1% | 58.4 / 39.8 |
+| spoof | 0.024 | 0.069 | -0.045 [-0.061, -0.030] | 55.4% / 61.5% | 0.0 / 47.1 |
+| loss_latency | 0.243 | 0.250 | -0.007 [-0.019, +0.008] | 61.0% / 59.2% | 207.5 / 46.6 |
+| slow_dense | 0.009 | 0.070 | -0.061 [-0.070, -0.052] | 57.7% / 61.9% | 0.0 / 48.0 |
+| **Overall** | **0.090** | **0.128** | **-0.038 [-0.057, -0.018]** | **51.2% / 54.7%** | **48.7 / 45.8** |
+
+**How to read this:**
+
+- **Cost:** J is 30% lower overall and the difference is significant. It comes from fresher information (L 0.40 vs 0.49) and less energy (E 0.23 vs 0.33).
+- **Accuracy:** the twin is correct 3.5 points less often (51.2% vs 54.7%), so the accuracy rule is **not** met.
+- **Synchronisation:** about the same in total (48.7 vs 45.8 per second). It is moved to degraded links: none with good links, up to 207 per second under loss + latency.
+- **What can be claimed:** in this simulation, joint trust-driven control of prediction horizon, synchronisation and beam lowers the J objective by 30% at a cost of about 3.5 points of twin accuracy.
 
 Not yet experimentally verified beyond these simulated runs. No CARLA, Sionna RT or hardware results are claimed.

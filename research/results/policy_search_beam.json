@@ -1,0 +1,120 @@
+{
+ "fixed": {
+  "J": 0.13049,
+  "R": 0.54594,
+  "sync_per_s": 47.2125,
+  "R_by_condition": {
+   "normal": 0.684239,
+   "normal_fast": 0.466006,
+   "loss": 0.705989,
+   "latency": 0.610293,
+   "lidar_degraded": 0.074876,
+   "spoof": 0.650428,
+   "loss_latency": 0.635236,
+   "slow_dense": 0.540453
+  }
+ },
+ "candidates": {
+  "c9": {
+   "J": 0.198498,
+   "R": 0.500097,
+   "sync_per_s": 85.431944,
+   "worst_condition_R_gap": -0.132223,
+   "feasible": false
+  },
+  "b1": {
+   "J": 0.092041,
+   "R": 0.504685,
+   "sync_per_s": 40.931944,
+   "worst_condition_R_gap": -0.142557,
+   "feasible": false
+  },
+  "b2": {
+   "J": 0.09866,
+   "R": 0.49644,
+   "sync_per_s": 45.380556,
+   "worst_condition_R_gap": -0.155204,
+   "feasible": false
+  },
+  "b3": {
+   "J": 0.095434,
+   "R": 0.496721,
+   "sync_per_s": 42.745833,
+   "worst_condition_R_gap": -0.164052,
+   "feasible": false
+  }
+ },
+ "selected": null,
+ "tolerance": 0.01,
+ "tables": {
+  "c9": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   },
+   "high": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   }
+  },
+  "b1": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "beam_switch",
+    "medium": "beam_switch",
+    "high": "beam_switch"
+   },
+   "high": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   }
+  },
+  "b2": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "increase_horizon",
+    "medium": "beam_switch",
+    "high": "beam_switch"
+   },
+   "high": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "increase_horizon"
+   }
+  },
+  "b3": {
+   "low": {
+    "low": "synchronize",
+    "medium": "synchronize",
+    "high": "synchronize"
+   },
+   "medium": {
+    "low": "increase_horizon",
+    "medium": "beam_switch",
+    "high": "beam_switch"
+   },
+   "high": {
+    "low": "increase_horizon",
+    "medium": "increase_horizon",
+    "high": "beam_switch"
+   }
+  }
+ },
+ "notes": "mmWave beam model on (12 deg beamwidth, 20 ms sweep) together with joint beam adaptation (JOINT_BEAM); selection seeds SEED_OFF=777, 90 s per condition. No candidate met the accuracy rule; b1 (lowest J, highest R of the beam-aware tables) was chosen."
+}

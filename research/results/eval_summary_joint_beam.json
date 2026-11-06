@@ -1,0 +1,293 @@
+{
+ "conditions": {
+  "normal": {
+   "twintrust": {
+    "J": 0.023567,
+    "L": 0.285944,
+    "E": 0.189904,
+    "O": 0,
+    "F": 0,
+    "R": 0.572667,
+    "sync_per_s": 0,
+    "beam_failures": 0,
+    "mean_H": 9.972,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.073913,
+    "L": 0.355175,
+    "E": 0.296072,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.6273,
+    "sync_per_s": 44.1,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": -0.050346,
+   "dJ_ci95": [
+    -0.063165,
+    -0.037556
+   ],
+   "significant": true
+  },
+  "normal_fast": {
+   "twintrust": {
+    "J": 0.004849,
+    "L": 0.252787,
+    "E": 0.159874,
+    "O": 0,
+    "F": 0,
+    "R": 0.602154,
+    "sync_per_s": 0,
+    "beam_failures": 0,
+    "mean_H": 9.977333,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.06581,
+    "L": 0.337745,
+    "E": 0.271949,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.620111,
+    "sync_per_s": 43.18,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": -0.060961,
+   "dJ_ci95": [
+    -0.074009,
+    -0.047941
+   ],
+   "significant": true
+  },
+  "loss": {
+   "twintrust": {
+    "J": 0.186569,
+    "L": 0.62101,
+    "E": 0.49897,
+    "O": 0.046,
+    "F": 0,
+    "R": 0.517851,
+    "sync_per_s": 21.986667,
+    "beam_failures": 0,
+    "mean_H": 7.917333,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.183921,
+    "L": 0.672203,
+    "E": 0.443335,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.618648,
+    "sync_per_s": 49.013333,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": 0.002648,
+   "dJ_ci95": [
+    -0.019611,
+    0.023846
+   ],
+   "significant": false
+  },
+  "latency": {
+   "twintrust": {
+    "J": 0.202819,
+    "L": 0.632996,
+    "E": 0.613727,
+    "O": 0.136667,
+    "F": 0,
+    "R": 0.703393,
+    "sync_per_s": 55.833333,
+    "beam_failures": 0,
+    "mean_H": 8.740667,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.162916,
+    "L": 0.666569,
+    "E": 0.426848,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.727302,
+    "sync_per_s": 41,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": 0.039902,
+   "dJ_ci95": [
+    -0.003886,
+    0.078323
+   ],
+   "significant": false
+  },
+  "lidar_degraded": {
+   "twintrust": {
+    "J": 0.171906,
+    "L": 0.305432,
+    "E": 0.403487,
+    "O": 0.134667,
+    "F": 0,
+    "R": 0.080554,
+    "sync_per_s": 54.546667,
+    "beam_failures": 0,
+    "mean_H": 9.888,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.14845,
+    "L": 0.346078,
+    "E": 0.274477,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.086436,
+    "sync_per_s": 39.1,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": 0.023456,
+   "dJ_ci95": [
+    0.012557,
+    0.034653
+   ],
+   "significant": true
+  },
+  "spoof": {
+   "twintrust": {
+    "J": -0.011229,
+    "L": 0.203332,
+    "E": 0.150783,
+    "O": 0,
+    "F": 0,
+    "R": 0.614794,
+    "sync_per_s": 0,
+    "beam_failures": 0,
+    "mean_H": 9.994667,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.075779,
+    "L": 0.359501,
+    "E": 0.297425,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.623876,
+    "sync_per_s": 44.473333,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": -0.087008,
+   "dJ_ci95": [
+    -0.103914,
+    -0.068299
+   ],
+   "significant": true
+  },
+  "loss_latency": {
+   "twintrust": {
+    "J": 0.30407,
+    "L": 0.700307,
+    "E": 0.790294,
+    "O": 0.346,
+    "F": 0,
+    "R": 0.655103,
+    "sync_per_s": 163.54,
+    "beam_failures": 0,
+    "mean_H": 7.892,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.237875,
+    "L": 0.905265,
+    "E": 0.449585,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.655723,
+    "sync_per_s": 47.58,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": 0.066195,
+   "dJ_ci95": [
+    0.056392,
+    0.076602
+   ],
+   "significant": true
+  },
+  "slow_dense": {
+   "twintrust": {
+    "J": 0.008304,
+    "L": 0.236444,
+    "E": 0.157683,
+    "O": 0,
+    "F": 0,
+    "R": 0.54896,
+    "sync_per_s": 0,
+    "beam_failures": 0,
+    "mean_H": 9.990667,
+    "cycles": 1500
+   },
+   "fixed": {
+    "J": 0.078287,
+    "L": 0.347642,
+    "E": 0.28303,
+    "O": 0.1,
+    "F": 0,
+    "R": 0.568199,
+    "sync_per_s": 47.933333,
+    "beam_failures": 0,
+    "mean_H": 5,
+    "cycles": 1500
+   },
+   "dJ": -0.069983,
+   "dJ_ci95": [
+    -0.082761,
+    -0.058861
+   ],
+   "significant": true
+  }
+ },
+ "note": "Compare TwinTrust-AP with the fixed-policy baseline on recorded evaluation runs (collect.py).",
+ "overall": {
+  "twintrust": {
+   "J": 0.111357,
+   "L": 0.404782,
+   "E": 0.37059,
+   "O": 0.082917,
+   "F": 0,
+   "R": 0.536934,
+   "sync_per_s": 36.988333,
+   "beam_failures": 0,
+   "mean_H": 9.296583,
+   "cycles": 12000
+  },
+  "fixed": {
+   "J": 0.128369,
+   "L": 0.498773,
+   "E": 0.34284,
+   "O": 0.1,
+   "F": 0,
+   "R": 0.565949,
+   "sync_per_s": 44.5475,
+   "beam_failures": 0,
+   "mean_H": 5,
+   "cycles": 12000
+  },
+  "dJ": -0.017012,
+  "dJ_ci95": [
+   -0.039765,
+   0.00638
+  ],
+  "significant": false
+ }
+}
