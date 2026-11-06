@@ -1,0 +1,27 @@
+jitc_llvm_init(): LLVM API initialization failed ..
+Traceback (most recent call last):
+  File "C:\Users\logap\aegis-v2x-live-drive\research\sionna_rt_check\.venv\Lib\site-packages\sionna\rt\__init__.py", line 16, in <module>
+    mi.set_variant(
+    ~~~~~~~~~~~~~~^
+        "cuda_ad_mono_polarized",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+        "metal_ad_mono_polarized",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "llvm_ad_mono_polarized",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+ImportError: jit_init_thread_state(): the LLVM backend is inactive because the LLVM shared library ("LLVM-C.dll") could not be found! Set the DRJIT_LIBLLVM_PATH environment variable to specify its path.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\logap\aegis-v2x-live-drive\research\sionna_rt_check\run_v2i_check.py", line 73, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\logap\aegis-v2x-live-drive\research\sionna_rt_check\run_v2i_check.py", line 26, in main
+    import sionna.rt as rt
+  File "C:\Users\logap\aegis-v2x-live-drive\research\sionna_rt_check\.venv\Lib\site-packages\sionna\rt\__init__.py", line 22, in <module>
+    mi.set_variant("llvm_ad_mono_polarized")
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportError: jit_init_thread_state(): the LLVM backend is inactive because the LLVM shared library ("LLVM-C.dll") could not be found! Set the DRJIT_LIBLLVM_PATH environment variable to specify its path.
