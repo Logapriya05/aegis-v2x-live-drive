@@ -407,3 +407,25 @@ Three changes, then the whole pipeline (calibration, selection, repeated runs) w
 
 Simulation only. 3GPP channel models, not a ray-traced (Sionna RT) or measured channel. Not yet experimentally verified beyond these runs.
 
+### 9. Across 6G candidate bands: 15, 30 and 100 GHz — `results/eval_band_15ghz.json`, `results/eval_band_100ghz.json`
+
+Same evaluation as section 8 (same 3 seed sets, 8 conditions × 150 s) with the 3GPP V2V channel at 15 GHz (upper mid-band), 30 GHz (section 8) and 100 GHz (the top of the TR 37.885 / TR 38.901 range); `FC_GHZ` in `pipeline/collect.py`.
+
+- **No re-tuning.** The policy table (b1) and the trust calibration were chosen at 30 GHz and used unchanged at the other bands.
+- **Held constant:** antenna gain (10 dBi per side), beamwidth (12°), bandwidth and noise figure. 100 GHz is therefore a pessimistic case: real arrays at higher bands have more gain for the same size.
+
+| Band | J TwinTrust-AP / fixed / AoI 0.5 s | ΔJ vs fixed [95% CI] | Syncs/s TT / fixed | Energy E TT / fixed | Vehicle twin correct TT / fixed / AoI |
+|---|---|---|---|---|---|
+| 15 GHz | 0.072 / 0.132 / 0.139 | −0.060 [−0.085, −0.036] (−45%) | 23.2 / 44.4 | 0.249 / 0.355 | 79.9% / 87.5% / 89.0% |
+| 30 GHz | 0.083 / 0.139 / 0.142 | −0.055 [−0.076, −0.034] (−40%) | 30.6 / 44.5 | 0.249 / 0.372 | 78.6% / 85.8% / 88.5% |
+| 100 GHz | 0.122 / 0.145 / 0.147 | −0.023 [−0.033, −0.013] (−16%) | 46.0 / 44.7 | 0.310 / 0.378 | 77.4% / 82.3% / 86.4% |
+
+**How to read this:**
+
+- **J.** TwinTrust-AP has the lowest J in every band, against both baselines, and every interval excludes 0.
+- **The advantage shrinks as frequency rises:** −45% at 15 GHz, −40% at 30 GHz, −16% at 100 GHz.
+  - At 100 GHz more links are degraded, so the table synchronises about as often as the fixed policy. The sync saving disappears: 46.0 vs 44.7 per second, interval [−8.5, +11.0].
+  - The remaining gain comes from fresher information and less energy: E −18%.
+- **Accuracy.** The twin is less accurate than with the baselines in every band. The gap to the fixed policy is 7.6, 7.2 and 4.9 points; at 15 and 100 GHz the 3-set interval includes 0.
+- **Claim.** "Evaluated across 6G candidate bands from 15 to 100 GHz with the 3GPP TR 37.885 mmWave V2V channel". Do not claim 6G performance or real-channel behaviour: no ray tracing (Sionna RT) and no measurements.
+
