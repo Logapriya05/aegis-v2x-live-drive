@@ -43,7 +43,9 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
   - **3GPP mmWave V2V channel:** TR 37.885 path loss, vehicle and building blockage and shadowing, with the TR 38.901 beam pattern; misaligned beams lose gain until the next beam sweep.
   - **FSDP:** a 3 × 3 table (trust bin × criticality bin) that picks one of six actions: synchronize, predict, beam switch, reduce horizon, increase horizon, maintain state.
   - **Joint beam adaptation:** in the same cycle, the beam is switched when buildings block at least 5% of V2V links, so prediction, synchronisation and beam are decided together.
-  - **Fixed policy:** a toggle switches to a baseline (horizon 5, edge sync every 1 s) so the resource use can be compared.
+  - **Baselines:** a switch selects TwinTrust-AP, the fixed policy (horizon 5, edge sync every 1 s) or the age-of-information baseline (sync when the mean information age exceeds 0.5 s), so the resource use and twin accuracy can be compared live.
+  - **mmWave band:** a second switch sets the V2V carrier to 15, 30 or 100 GHz (6G candidate bands).
+  - **Recorded results:** a card shows J, syncs per second and twin correctness for the three policies in each band (3 seed sets), including the accuracy cost of TwinTrust-AP.
 - **Trust Score (0–100):** how much the vehicle can trust its situation right now. Six hazards are combined: collision risk (time-to-collision), a pedestrian ahead, a red light needing hard braking, close following, lane status and **low twin trust**. The twin term is `r_twin = 0.6 × clamp((0.6 − T)/0.6, 0, 1)`, so a reliable twin (T ≥ 0.6) costs nothing:
 
   `Trust Score = 5 + 95 × (1 − r_coll)(1 − r_ped)(1 − r_signal)(1 − r_headway)(1 − r_lane)(1 − r_twin)`
