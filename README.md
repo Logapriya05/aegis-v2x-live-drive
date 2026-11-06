@@ -40,6 +40,7 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
   - **GDCA authority A = exp(−½z²)**, from per-object residuals against their robust spread.
   - **TAHS:** sets the prediction horizon H from T, C and A.
   - **FSDP:** a 3 × 3 table (trust bin × criticality bin) that picks one of six actions: synchronize, predict, beam switch, reduce horizon, increase horizon, maintain state.
+  - **Joint beam adaptation:** in the same cycle, the beam is switched when buildings block at least 5% of V2V links, so prediction, synchronisation and beam are decided together.
   - **Fixed policy:** a toggle switches to a baseline (horizon 5, edge sync every 1 s) so the resource use can be compared.
 - **Trust Score (0–100):** how much the vehicle can trust its situation right now. Six hazards are combined: collision risk (time-to-collision), a pedestrian ahead, a red light needing hard braking, close following, lane status and **low twin trust**. The twin term is `r_twin = 0.6 × clamp((0.6 − T)/0.6, 0, 1)`, so a reliable twin (T ≥ 0.6) costs nothing:
 
@@ -56,7 +57,9 @@ Live: https://logapriya05.github.io/aegis-v2x-live-drive/
 
 - Everything is simulated in the browser. It is not connected to CARLA, SUMO, Sionna RT or the project backend.
 - The TwinTrust-AP formulas are Vaishnavi's Python code (copied unchanged into `research/aegis_ai/`), ported to JavaScript and checked case by case (`research/tests/`). The evidence that feeds them, the calibration and the FSDP table come from **this simulated city**, not from CARLA or real vehicles.
-- The FSDP table was chosen as the lowest-cost table that keeps the twin as accurate as the fixed policy. No candidate met that in every condition; the chosen one matches the fixed policy's accuracy overall (57.5% vs 56.6%) at about the same cost, and moves synchronisation to degraded links rather than reducing it. See `research/README.md`.
+- The FSDP table was chosen as the lowest-cost table that keeps the twin as accurate as the fixed policy. No candidate met that in every condition; the closest one was chosen.
+- The demo runs table b1 with a simple **mmWave beam model** (12° beams, 20 ms sweeps) and joint beam adaptation. In recorded test runs this cut the J objective by 30% against the fixed policy, with twin correctness 3.5 points lower (51.2% vs 54.7%).
+- The beam model is a simple geometric mmWave model, not a ray-traced channel (Sionna RT). See `research/README.md`.
 - The weights of the Trust Score's hazard terms and the evidence scales (3 m error, 1 s age, 300 ms latency) are design choices, not fitted values.
 - Weather changes visuals and the reported road friction only. Vehicle dynamics do not change with weather.
 - Collision risk is evaluated only while the ego is moving. Being hit from behind while stationary is not modelled.

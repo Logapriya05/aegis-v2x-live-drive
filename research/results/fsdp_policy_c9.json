@@ -1,0 +1,22 @@
+{
+ "policy": {
+  "low": {
+   "low": "synchronize",
+   "medium": "synchronize",
+   "high": "synchronize"
+  },
+  "medium": {
+   "low": "increase_horizon",
+   "medium": "increase_horizon",
+   "high": "increase_horizon"
+  },
+  "high": {
+   "low": "increase_horizon",
+   "medium": "increase_horizon",
+   "high": "increase_horizon"
+  }
+ },
+ "name": "c9",
+ "rule": "synchronize when trust is low, otherwise increase the prediction horizon",
+ "selected_by": "research/pipeline/select_policy.py (see results/policy_search.json)"
+}

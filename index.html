@@ -613,7 +613,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
           <div class="aggsw" role="group" aria-label="Control policy"><button type="button" data-pol="twintrust" aria-pressed="true">TwinTrust-AP</button><button type="button" data-pol="fixed" aria-pressed="false">Fixed policy (baseline)</button></div>
           <div class="stats ttnow" id="ttNow"></div>
           <div class="ttcols"><div><h4>Twin trust evidence</h4><div id="ttEv"></div></div><div><h4>Criticality features</h4><div id="ttCf"></div></div></div>
-          <p class="fine"><b>What happens every cycle.</b> The ego compares each digital-twin object with where its own LiDAR sees it. That gives the evidence for the <b>Calibrated Twin Trust Estimator</b>: prediction error e, error spread u, information age a and link quality q. <b>T = σ(a·raw + b)</b>, with raw = 0.20q − 0.35e − 0.25u − 0.20a. <b>Criticality C</b> is the weighted sum of the five features on the right, and <b>GDCA authority A</b> = exp(−½z²) from each object's residuals against their robust spread. <b>TAHS</b> turns T, C and A into a prediction horizon H, and the <b>FSDP</b> table picks one action for the current (trust, criticality) state. Formulas are Vaishnavi's Python code, ported exactly (12,000 test cases match). The twin error uses the simulator, which a real vehicle would only see through its own sensors.</p>
+          <p class="fine"><b>What happens every cycle.</b> The ego compares each digital-twin object with where its own LiDAR sees it. That gives the evidence for the <b>Calibrated Twin Trust Estimator</b>: prediction error e, error spread u, information age a and link quality q. <b>T = σ(a·raw + b)</b>, with raw = 0.20q − 0.35e − 0.25u − 0.20a. <b>Criticality C</b> is the weighted sum of the five features on the right, and <b>GDCA authority A</b> = exp(−½z²) from each object's residuals against their robust spread. <b>TAHS</b> turns T, C and A into a prediction horizon H, the <b>FSDP</b> table picks one action for the current (trust, criticality) state, and the beam is switched in the same cycle when buildings block V2V links, so prediction, synchronisation and beam are decided jointly. Formulas are Vaishnavi's Python code, ported exactly (12,000 test cases match). The twin error uses the simulator, which a real vehicle would only see through its own sensors.</p>
         </article>
         <div class="ovcol">
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg>FSDP policy table</h3><span class="sub">Trust bin × criticality bin → action</span></header>
@@ -621,7 +621,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
             <p class="fine" id="ttPolNote"></p></article>
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Resource use</h3><span class="sub" id="ttAccSub">since the last mode switch</span><button type="button" class="ttreset" id="ttReset">Reset</button></header>
             <div class="stats ttacc" id="ttAcc"></div>
-            <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded test runs (8 conditions × 150 s) this table kept the twin as accurate as the fixed policy overall (57.5% vs 56.6%) at about the same J. It skips synchronisation where links are good and spends it where they are degraded, so total synchronisation is not lower. Details in research/README.md.</p></article>
+            <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded test runs (8 conditions × 150 s, mmWave beam model) this table cut J by 30% against the fixed policy (0.090 vs 0.128) and kept information fresher, but its twin was correct 3.5 points less often (51.2% vs 54.7%). Details in research/README.md.</p></article>
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-sync"/></svg>Trust calibration</h3><span class="sub">Platt scaling, held-out cycles</span></header>
             <div class="stats" id="ttCal"></div>
             <p class="fine">Calibrated means T matches how often the twin is really right. Target: a twin object is within 1 m of where LiDAR sees it on the next cycle. Fitted on recorded cycles from this simulated city, not from CARLA.</p></article>
@@ -1467,7 +1467,7 @@ function truePos(e){if(e.kind==='V2V'||e.kind==='V2P')return{x:e.x,z:e.z,vx:e.vx
 function v2xStep(){
   for(const e of allEntities()){if(t<e.nextTx)continue;e.nextTx=t+PERIOD[e.kind]*(e.kind==='V2V'?rnd(.95,1.05):1);
     const tp=truePos(e);const d=Math.hypot(tp.x-ego.x,tp.z-ego.z);if(d>RANGE[e.kind])continue;
-    let pLoss=.01+Math.pow(d/RANGE[e.kind],3)*.25+(fault.loss?.6:0);if((e.kind==='V2V'||e.kind==='V2P')&&losBlocked(ego.x,ego.z,tp.x,tp.z))pLoss+=t<ttap.relayUntil?.06:.30;if(Math.random()<pLoss){lossLog.push(t);delivNote(e.id,false);continue}
+    let pLoss=.01+Math.pow(d/RANGE[e.kind],3)*.25+(fault.loss?.6:0);if((e.kind==='V2V'||e.kind==='V2P')&&losBlocked(ego.x,ego.z,tp.x,tp.z))pLoss+=t<ttap.relayUntil?.06:.30;if(e.kind==='V2V')pLoss+=beamLoss(e.id,tp);if(t<ttap.beamOutUntil)pLoss=1;if(Math.random()<pLoss){lossLog.push(t);delivNote(e.id,false);continue}
     const lat=(6+d*.04+Math.random()*5+(fault.lat?280+Math.random()*80:0))/1000;const sig=e.kind==='V2V'?.4:e.kind==='V2P'?2.0:.05;
     let cx=tp.x+gauss()*sig,cz=tp.z+gauss()*sig;
     if(e.malicious){const H=headingOf(e);cx+=H[0]*11-H[1]*3.5;cz+=H[1]*11+H[0]*3.5}
@@ -1917,18 +1917,23 @@ const TTAP_CFG = {
   // Platt calibration T_cal = sigmoid(a*raw + b). Uncalibrated (her formula) is a = 1/tau, b = 0.
   CAL: { a: 3.303141, b: 0.659757, fitted: true, source: 'Platt scaling, 8000 recorded cycles, tested on 3992 held-out', eceUnc: 0.1288, eceCal: 0.0419 },
   CAL_UNC: { a: 1 / 0.8, b: 0 }, // her uncalibrated estimator (tau = 0.8), kept for comparison
-  // FSDP policy table [trustBin][critBin] -> action, chosen by constrained closed-loop selection
-  // (research/pipeline/select_policy.py): lowest J among candidate tables whose twin correctness
-  // is at least the fixed baseline's. No candidate met that in every condition; this one (c9)
-  // came closest and was accepted; the conditions where it misses are reported in research/README.md.
-  POLICY: {"low": {"low": "synchronize", "medium": "synchronize", "high": "synchronize"}, "medium": {"low": "increase_horizon", "medium": "increase_horizon", "high": "increase_horizon"}, "high": {"low": "increase_horizon", "medium": "increase_horizon", "high": "increase_horizon"}},
-  POLICY_SRC: 'c9: synchronize when trust is low, otherwise lengthen the prediction horizon',
+  // FSDP policy table [trustBin][critBin] -> action, chosen by constrained closed-loop selection with the
+  // mmWave beam model (research/pipeline/select_policy.py): lowest J among candidate tables whose twin
+  // correctness is at least the fixed baseline's. No candidate met that; this one (b1) had the lowest J and
+  // the highest accuracy of the beam-aware tables. Runs together with JOINT_BEAM below. See research/README.md.
+  POLICY: {"low": {"low": "synchronize", "medium": "synchronize", "high": "synchronize"}, "medium": {"low": "beam_switch", "medium": "beam_switch", "high": "beam_switch"}, "high": {"low": "increase_horizon", "medium": "increase_horizon", "high": "increase_horizon"}},
+  POLICY_SRC: 'b1: synchronize when trust is low, beam switch when it is medium, lengthen the horizon when it is high',
   FIXED: { H: 5, syncEvery: 10 }, // fixed-policy baseline: horizon 5, edge sync every 1 s, prediction always on
+  // Joint beam adaptation: in the same cycle as the table's prediction/synchronisation action, switch the
+  // beam (alternate path / relay for 2 s) when at least minBlock of the V2V links are blocked by buildings
+  // and no switch is active. This makes the decision joint (horizon + sync + beam), as in the paper title.
+  // The beam model is abstract: a switch cuts the extra loss on blocked links from 30% to 6%; no RF beam physics.
+  JOINT_BEAM: { on: true, minBlock: 0.05, holdS: 2 },
   // objective J = 0.25 L + 0.20 E + 0.20 O + 0.20 F - 0.15 R (configs/model.yaml objective_function)
   J_W: { L: 0.25, E: 0.20, O: 0.20, F: 0.20, R: 0.15 },
 };
 const BINS = ['low', 'medium', 'high'];
-const ttap = { mode: 'twintrust', H: 5, hIdxOff: 0, predictOn: true, relayUntil: -1, cycle: 0, action: 'maintain_state', state: 'medium/low',
+const ttap = { mode: 'twintrust', H: 5, hIdxOff: 0, predictOn: true, relayUntil: -1, beamOutUntil: -1, beams: new Map(), cycle: 0, action: 'maintain_state', state: 'medium/low',
   T: null, Traw: null, Tunc: null, C: null, A: null, ev: null, cf: null, errHist: [], win: new Map(), objT: new Map(),
   acc: { cycles: 0, sync: 0, cam: 0, pred: 0, beam: 0, beamFail: 0, J: 0, R: 0, L: 0 }, log: [], explore: false };
 const horizonS = () => ttap.H * 0.1;
@@ -1947,13 +1952,28 @@ function edgeSync() { let n = 0;
 function deliverSync(m) { const pv = twin.get(m.id), r = trustDB.get(m.id); if (r && r.isolated) return;
   twin.set(m.id, Object.assign({}, pv || { id: m.id, kind: m.kind, src: 'v2x', type: m.ent.type, ent: m.ent }, { x: m.x, z: m.z, vx: m.vx, vz: m.vz, h: m.h ?? pv?.h, w: 0, tGen: m.tGen, tRecv: t, src: 'v2x', sync: true })) }
 
+/* mmWave beam model (V2V links). Each link keeps the bearing its beam was last aligned to. As the
+   vehicles move the true bearing drifts; outside half the beamwidth the gain falls and packets are lost.
+   A beam switch (beam sweep) realigns every link to the current bearing and costs a short outage.
+   Values are design choices for an FR2 (24-52 GHz) link, not measured: 12 deg beamwidth, 20 ms sweep. */
+const BEAM = { WIDTH: 12 * Math.PI / 180, MAX_LOSS: 0.7, SWEEP_S: 0.02 };
+const bearingTo = tp => Math.atan2(tp.x - ego.x, -(tp.z - ego.z)) - ego.psi;
+const angDiff = (a, b) => { let d = (a - b) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return Math.abs(d) };
+function beamMisalign(id, tp) { const b = bearingTo(tp); let a = ttap.beams.get(id); if (a === undefined) { ttap.beams.set(id, b); return 0 } return angDiff(b, a) }
+function beamLoss(id, tp) { const m = beamMisalign(id, tp) - BEAM.WIDTH / 2; return m <= 0 ? 0 : BEAM.MAX_LOSS * clamp(m / BEAM.WIDTH, 0, 1) }
+function beamSweep() { let n = 0, mis = 0; const seen = new Set();
+  for (const e of allEntities()) { if (e.kind !== 'V2V') continue; const tp = truePos(e); if (Math.hypot(tp.x - ego.x, tp.z - ego.z) > RANGE.V2V) continue;
+    n++; seen.add(e.id); if (beamMisalign(e.id, tp) > BEAM.WIDTH / 2) mis++; ttap.beams.set(e.id, bearingTo(tp)) }
+  for (const id of [...ttap.beams.keys()]) if (!seen.has(id)) ttap.beams.delete(id);
+  ttap.beamOutUntil = t + BEAM.SWEEP_S; return { n, mis } }
+
 // live evidence for her estimators, from the digital twin vs the ego's own LiDAR
 function ttapEvidence() {
   const Ld = lidar(), C = TTAP_CFG; let errSum = 0, n = 0, ok = 0, ageSum = 0, an = 0, aList = [], blocked = 0, links = 0, relMax = 0, dens = 0, pred = 0;
   const evx = Math.sin(ego.psi) * ego.v, evz = -Math.cos(ego.psi) * ego.v;
   for (const [id, o] of twinObjs) { const tw = twin.get(id); if (!tw || (tw.kind !== 'V2V' && tw.kind !== 'V2P')) continue; const ent = tw.ent; if (!ent) continue;
     const d = Math.hypot(ent.x - ego.x, ent.z - ego.z); const age = t - tw.tGen; if (tw.src === 'v2x') { ageSum += age; an++; if (age > .15) pred++ }
-    if (tw.src === 'v2x' && tw.kind === 'V2V' && d < RANGE.V2V) { links++; if (losBlocked(ego.x, ego.z, ent.x, ent.z)) blocked++ }
+    if (tw.src === 'v2x' && tw.kind === 'V2V' && d < RANGE.V2V) { links++; if (losBlocked(ego.x, ego.z, ent.x, ent.z) || beamMisalign(id, ent) > BEAM.WIDTH / 2) blocked++ }
     if (d < 50) dens++;
     if (d < 60) { const rx = ent.x - ego.x, rz = ent.z - ego.z, rvx = (ent.vx || 0) - evx, rvz = (ent.vz || 0) - evz; const cl = -(rx * rvx + rz * rvz) / Math.max(1, d); if (cl > relMax) relMax = cl }
     if (d > Ld.range) continue; // only objects the ego can verify with its own LiDAR give prediction-error evidence
@@ -1993,7 +2013,7 @@ function ttapStep() {
   const A = ttap.acc; let syncN = 0, beam = 0, beamFail = 0;
   if (ttap.mode === 'fixed') {
     ttap.H = TTAP_CFG.FIXED.H; ttap.predictOn = true; ttap.action = ttap.cycle % TTAP_CFG.FIXED.syncEvery === 0 ? 'synchronize' : 'predict'; ttap.state = 'fixed';
-    if (ttap.action === 'synchronize') syncN = edgeSync();
+    if (ttap.action === 'synchronize') { syncN = edgeSync(); beamSweep(); beam = 1 }
   } else {
     const Tb = binOf(ttap.T, TTAP_CFG.TRUST_BINS), Cb = binOf(ttap.C, TTAP_CFG.CRIT_BINS); ttap.state = `${BINS[Tb]}/${BINS[Cb]}`;
     const act = ttapAction(Tb, Cb); ttap.action = act;
@@ -2002,15 +2022,17 @@ function ttapStep() {
     ttap.H = disc[clamp(base + ttap.hIdxOff, 0, disc.length - 1)];
     if (act === 'synchronize') syncN = edgeSync();
     if (act === 'predict' || act === 'reduce_horizon' || act === 'increase_horizon') ttap.predictOn = true;
-    else if (act === 'synchronize' || act === 'beam_switch') ttap.predictOn = false;
-    if (act === 'beam_switch') { beam = 1; if (ev.cf.block < .05) beamFail = 1; else ttap.relayUntil = t + 2 } // switching with no blocked link achieves nothing
+    else if (act === 'synchronize') ttap.predictOn = false;
+    if (act === 'beam_switch') { beam = 1; const sw = beamSweep(); if (ev.cf.block < .05 && sw.mis === 0) beamFail = 1; else ttap.relayUntil = t + 2 } // a sweep with no misaligned or blocked link achieves nothing
+    const JB = TTAP_CFG.JOINT_BEAM;
+    if (JB.on && act !== 'beam_switch' && ev.cf.block >= JB.minBlock && t >= ttap.relayUntil) { beam = 1; ttap.relayUntil = t + JB.holdS; ttap.jointBeam = true } else ttap.jointBeam = false;
   }
   // cost accounting for J (per cycle, each term normalised to ~[0,1])
   const nObj = Math.max(1, ev.links + 1), predN = ttap.predictOn ? ev.predicted : 0;
   const L = clamp(ev.a, 0, 1), E = clamp((syncN + .05 * predN * ttap.H + 2 * beam) / (nObj * 1.5), 0, 1), O = clamp(syncN / nObj, 0, 1), F = beamFail, Rl = ev.correct ?? 1;
   const W = TTAP_CFG.J_W, J = W.L * L + W.E * E + W.O * O + W.F * F - W.R * Rl;
   A.cycles++; A.sync += 0; A.pred += predN; A.beam += beam; A.beamFail += beamFail; A.J += J; A.R += Rl; A.L += L;
-  ttap.last = { t, state: ttap.state, action: ttap.action, H: ttap.H, T: ttap.T, Tunc: ttap.Tunc, C: ttap.C, A: ttap.A, e: ev.e, u: ev.u, a: ev.a, q: ev.q, cf: ev.cf, correct: ev.correct, meanErr: ev.meanErr, J, L, E, O, F, R: Rl, syncN };
+  ttap.last = { t, state: ttap.state, action: ttap.action, H: ttap.H, T: ttap.T, Tunc: ttap.Tunc, C: ttap.C, A: ttap.A, e: ev.e, u: ev.u, a: ev.a, q: ev.q, cf: ev.cf, correct: ev.correct, meanErr: ev.meanErr, J, L, E, O, F, R: Rl, syncN, beam, block: ev.cf.block, jointBeam: !!ttap.jointBeam };
   if (window.__ttapRecord) window.__ttapRecord.push(ttap.last);
 }
 function ttapReset() { Object.assign(ttap.acc, { cycles: 0, sync: 0, cam: 0, pred: 0, beam: 0, beamFail: 0, J: 0, R: 0, L: 0 }) }
@@ -2125,13 +2147,13 @@ function renderTTAP(force){if(curTab!=='ttap'&&!force)return;const L=ttap.last;c
   $('ttNow').innerHTML=`<div><small>Twin trust T (calibrated)</small><b style="color:${tc(L.T)}">${L.T.toFixed(2)}</b></div><div><small>T uncalibrated</small><b>${L.Tunc.toFixed(2)}</b></div>
    <div><small>Criticality C</small><b style="color:${cc(L.C)}">${L.C.toFixed(2)}</b></div><div><small>GDCA authority A</small><b>${L.A.toFixed(2)}</b></div>
    <div><small>Horizon H (TAHS)</small><b>${L.H}<em>${(L.H*.1).toFixed(1)} s</em></b></div><div><small>FSDP state</small><b>${fx?'—':L.state}</b></div>
-   <div><small>Action</small><b>${ACT_LABEL[L.action]||L.action}</b></div><div><small>Twin objects correct</small><b>${L.correct==null?'none in LiDAR range':Math.round(L.correct*100)+'%'}</b></div>`;
+   <div><small>Action</small><b>${ACT_LABEL[L.action]||L.action}${L.jointBeam?' + beam switch':''}</b></div><div><small>Twin objects correct</small><b>${L.correct==null?'none in LiDAR range':Math.round(L.correct*100)+'%'}</b></div>`;
   $('ttEv').innerHTML=ttBar('Prediction error e',L.e,'#ff7a8a')+ttBar('Error spread u',L.u,'#ff9f6b')+ttBar('Information age a',L.a,'#ffb648')+ttBar('Link quality q',L.q,'#45e38f')+`<div class="ttb"><span>Twin error</span><i></i><b>${L.meanErr==null?'—':L.meanErr.toFixed(1)+'m'}</b></div>`;
   const f=L.cf;$('ttCf').innerHTML=ttBar('Closing speed',f.rel,'#ff7a8a')+ttBar('Blocked links',f.block,'#c48bff')+ttBar('Info age',f.age,'#ffb648')+ttBar('Channel loss',f.chan,'#6ab0ff')+ttBar('Traffic density',f.dens,'#8fd3c7');
   const P=TTAP_CFG.POLICY;let tb='<thead><tr><th>Trust ＼ Criticality</th><th>Low</th><th>Medium</th><th>High</th></tr></thead><tbody>';
   for(const T of['high','medium','low']){tb+=`<tr><th>${T[0].toUpperCase()+T.slice(1)}</th>`;for(const C of BINS){const k=`${T}/${C}`;tb+=`<td class="${!fx&&L.state===k?'cur':''}">${P?ACT_LABEL[P[T][C]]:'—'}</td>`}tb+='</tr>'}
   $('ttPol').innerHTML=tb+'</tbody>';
-  $('ttPolNote').textContent=fx?'Fixed policy is active: the table is not used. Horizon 5 and an edge synchronisation every 1 s, whatever the trust and criticality.':'Highlighted: the current state. Bins: trust low < 0.4 ≤ medium < 0.6 ≤ high; criticality in thirds. The table was chosen by running whole candidate tables in this simulation: lowest J among tables whose twin is at least as accurate as the fixed policy\'s. None met that in every condition; this one came closest. In test runs it matched the fixed policy\'s accuracy overall but was less accurate in some conditions, and which ones varied between runs.';
+  $('ttPolNote').textContent=fx?'Fixed policy is active: the table is not used. Horizon 5 and an edge synchronisation every 1 s, whatever the trust and criticality.':'Highlighted: the current state. Bins: trust low < 0.4 ≤ medium < 0.6 ≤ high; criticality in thirds. The table was chosen by running whole candidate tables in this simulation: lowest J among tables whose twin is at least as accurate as the fixed policy\'s. None met that; this one had the lowest J. With the mmWave beam model, test runs cut J by 30% against the fixed policy (0.090 vs 0.128), with a twin correct 3.5 points less often (51.2% vs 54.7%).';
   const A=ttap.acc,n=Math.max(1,A.cycles),sec=A.cycles/10;
   $('ttAccSub').textContent=`last ${sec.toFixed(0)} s · ${fx?'fixed policy':'TwinTrust-AP'}`;
   $('ttAcc').innerHTML=`<div><small>Edge syncs / s</small><b>${(A.sync/Math.max(.1,sec)).toFixed(1)}</b></div><div><small>Mean info age</small><b>${(A.L/n*TTAP_CFG.AGE_REF*1000).toFixed(0)} ms</b></div>
