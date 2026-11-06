@@ -1,0 +1,19 @@
+{
+ "what": "one TwinTrust-AP decision cycle (evidence -> calibrated trust -> criticality -> TAHS -> FSDP)",
+ "cycles": 20000,
+ "seed": 7,
+ "latency_us": {
+  "mean": 13.15937595,
+  "median": 11.213,
+  "p95": 21.04995,
+  "p99": 32.70166999999999,
+  "max": 171.91
+ },
+ "peak_traced_memory_kib_per_1000_cycles": 8.484375,
+ "budget_note": "the demo runs the cycle at 10 Hz, i.e. a 100 ms budget",
+ "machine": {
+  "python": "3.13.18",
+  "platform": "Linux-6.18.44-fc-v242-x86_64-with-glibc2.39",
+  "processor": "x86_64"
+ }
+}
