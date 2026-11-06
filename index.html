@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Aegis-V2X Live Drive</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Aegis-V2X: A Calibrated Trust-Driven Autonomic Framework for Joint Prediction, Synchronization and Beam Adaptation in Digital Twin-Assisted 6G V2X Networks. Live drive demo.">
+<meta name="description" content="Aegis-V2X: A Calibrated Trust-Driven Autonomic Framework for Joint Prediction, Synchronization and Beam Adaptation in Digital Twin-Assisted 6G V2X Networks. Live drive simulation.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Chakra+Petch:wght@600;700&display=swap">
 <style>
@@ -412,10 +412,10 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
 @media (max-width:1100px){.ph p{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
 
-/* ---------- monitoring dashboard (demo data, Grafana-style) ---------- */
-.demoband{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:var(--gap);border-radius:var(--r-md);background:var(--warn-soft);border:1px solid rgba(255,182,72,.35);color:#ffd9a0;font-size:12.5px;font-weight:500}
-.demoband .ic{width:18px;height:18px;flex:none;color:var(--warn)}
-.demoband b{color:#ffe6bd}
+/* ---------- monitoring dashboard (Grafana-style) ---------- */
+.monband{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:var(--gap);border-radius:var(--r-md);background:var(--warn-soft);border:1px solid rgba(255,182,72,.35);color:#ffd9a0;font-size:12.5px;font-weight:500}
+.monband .ic{width:18px;height:18px;flex:none;color:var(--warn)}
+.monband b{color:#ffe6bd}
 .montool{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:var(--gap)}
 .montool .seg{display:flex;gap:2px;padding:3px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--border)}
 .montool .seg button{background:transparent;border:0;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;white-space:nowrap;transition:background .15s var(--ease),color .15s var(--ease)}
@@ -551,7 +551,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
       <button type="button" role="tab" id="t-v2x" aria-selected="false" data-tab="v2x"><svg class="ic" aria-hidden="true"><use href="#i-radio"/></svg>V2X communication</button>
       <button type="button" role="tab" id="t-twin" aria-selected="false" data-tab="twin"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg>Digital twin</button>
       <button type="button" role="tab" id="t-ttap" aria-selected="false" data-tab="ttap"><svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg>TwinTrust-AP</button>
-      <button type="button" role="tab" id="t-monitor" aria-selected="false" data-tab="monitor"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Monitoring (demo)</button>
+      <button type="button" role="tab" id="t-monitor" aria-selected="false" data-tab="monitor"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Monitoring</button>
       <button type="button" role="tab" id="t-life" aria-selected="false" data-tab="life"><svg class="ic" aria-hidden="true"><use href="#i-route"/></svg>Vehicle life log</button>
       <button type="button" role="tab" id="t-faults" aria-selected="false" data-tab="faults"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>Fault injection</button>
     </div>
@@ -613,7 +613,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
             <thead><tr><th>Source</th><th>Link</th><th>Dist</th><th>Latency</th><th>Evidence</th><th>Trust</th><th>Trust Score</th><th>Status</th></tr></thead>
             <tbody id="trustBody"></tbody>
           </table></div>
-          <p class="fine">α ← λʷα + w·c, β ← λʷβ + w(1−c), λ = 0.97. c is the agreement between the claimed position and the ego's LiDAR (w = 1), or with the source's own previous message when the source is out of LiDAR range (w = 0.25). Below 0.35 a source is isolated and the twin places it from LiDAR. Isolation uses data trust only, because an honest but erratic driver still reports accurate positions. <b>Behaviour trust</b> uses the same update with its own α, β (prior 0.95), fed by the lane status of the LiDAR-observed position: GREEN c = 1, w = 0.1; YELLOW c = 0.4, w = 0.2; RED c = 0, w = 0.6, counted after 3 consecutive identical checks. Lane changes and turns announced by the vehicle's indicator (CAM exterior-light field) are permitted. No behaviour check happens beyond LiDAR range or when LiDAR is degraded. Shown trust = data × behaviour. This is the demo's trust heuristic, not the calibrated TwinTrust estimator.</p>
+          <p class="fine">α ← λʷα + w·c, β ← λʷβ + w(1−c), λ = 0.97. c is the agreement between the claimed position and the ego's LiDAR (w = 1), or with the source's own previous message when the source is out of LiDAR range (w = 0.25). Below 0.35 a source is isolated and the twin places it from LiDAR. Isolation uses data trust only, because an honest but erratic driver still reports accurate positions. <b>Behaviour trust</b> uses the same update with its own α, β (prior 0.95), fed by the lane status of the LiDAR-observed position: GREEN c = 1, w = 0.1; YELLOW c = 0.4, w = 0.2; RED c = 0, w = 0.6, counted after 3 consecutive identical checks. Lane changes and turns announced by the vehicle's indicator (CAM exterior-light field) are permitted. No behaviour check happens beyond LiDAR range or when LiDAR is degraded. Shown trust = data × behaviour. This is the page's trust heuristic, not the calibrated TwinTrust estimator.</p>
         </article>
         <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Live events</h3><span class="sub">V2V · V2I · V2P · V2E</span></header><ul class="feed" id="feed"></ul></article>
       </div>
@@ -676,7 +676,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
     </div>
 
     <div class="tabpanel" id="tab-monitor" role="tabpanel" hidden>
-      <div class="demoband"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span><b>Demo data only.</b> Every number, chart and table on this tab is a simulated sample feed for layout/UX purposes. It is <b>not</b> connected to the live TwinTrust-AP simulation, the FastAPI backend, Prometheus or a real Grafana instance, and does not reflect measured results — see the "TwinTrust-AP" tab and <code>research/README.md</code> for those.</span></div>
+      <div class="monband"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg><span><b>Live.</b> Streaming from the running TwinTrust-AP loop and V2X channel in this page, sampled every 1 s. Switch policy, band or faults to see it react.</span></div>
       <div class="montool">
         <div class="seg" role="group" aria-label="Time range" id="monRange">
           <button type="button" data-range="300" class="on">Last 5 minutes</button>
@@ -689,30 +689,30 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
         <div class="upd">Last updated <b id="monUpdated">—</b></div>
       </div>
 
-      <div class="tiles" id="monStats" aria-label="Monitoring summary (demo data)"></div>
+      <div class="tiles" id="monStats" aria-label="Monitoring summary"></div>
 
       <div class="mongrid" id="monCharts"></div>
 
       <div class="mon2">
         <article class="card">
-          <header><h3><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Vehicle telemetry (demo)</h3><span class="sub">Sample feed · one row per simulated connection</span></header>
-          <div class="tablewrap"><table><thead><tr><th>Vehicle</th><th>Trust</th><th>Latency</th><th>Beam</th><th>Sync</th><th>Status</th></tr></thead><tbody id="monVehBody"></tbody></table></div>
+          <header><h3><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Vehicle telemetry</h3><span class="sub">Live · freshest V2X vehicles in the twin</span></header>
+          <div class="tablewrap"><table><thead><tr><th>Vehicle</th><th>Trust</th><th>Info age</th><th>Beam</th><th>Link</th><th>Status</th></tr></thead><tbody id="monVehBody"></tbody></table></div>
         </article>
         <article class="card">
-          <header><h3><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg>Network health (demo)</h3><span class="sub">Sample status indicators</span></header>
+          <header><h3><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg>Network health</h3><span class="sub">Live status</span></header>
           <dl class="status" id="monHealth"></dl>
         </article>
       </div>
 
       <div class="two">
-        <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-radio"/></svg>Active vehicle connections (demo)</h3><span class="sub">Sample link list</span><span class="tag" id="monConnCount">—</span></header>
+        <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-radio"/></svg>Active vehicle connections</h3><span class="sub">Live link list</span><span class="tag" id="monConnCount">—</span></header>
           <div class="monconn" id="monConn"></div>
         </article>
-        <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Recent system events (demo)</h3><span class="sub">Simulated event feed</span></header>
+        <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Recent system events</h3><span class="sub">TwinTrust-AP decisions and isolations</span></header>
           <ul class="feed" id="monEvents"></ul>
         </article>
       </div>
-      <p class="fine">This panel is a self-contained UI mock styled after Grafana, built to demonstrate what a production monitoring dashboard for Aegis-V2X could look like. All series are generated client-side with a seeded random walk and never read from the simulation, the backend, or any file under <code>research/results/</code>.</p>
+      <p class="fine">Data source: the in-page simulation (TwinTrust-AP state, digital twin, per-source trust and the 3GPP V2V channel). Information age is the mean age of the twin's V2X data; link quality is 1 − packet error rate.</p>
     </div>
 
     <div class="tabpanel" id="tab-life" role="tabpanel" hidden>
@@ -2006,7 +2006,7 @@ const TT = (() => {
 })();
 
 /* ================= TwinTrust-AP live runtime =================
-   Runs Vaishnavi's algorithms (TT, exact port above) on the demo's live data every 0.1 s of simulated time:
+   Runs Vaishnavi's algorithms (TT, exact port above) on the page's live data every 0.1 s of simulated time:
 
      evidence (twin vs ego LiDAR, info age, link quality, traffic, blockage)
        -> Calibrated Twin Trust T   (her formula + Platt calibration fitted offline, research/pipeline/calibrate_trust.py)
@@ -2016,7 +2016,7 @@ const TT = (() => {
        -> FSDP action               (3x3 policy table generated offline, research/pipeline/generate_fsdp_policy.py)
        -> the action is executed on the digital twin, and its cost is accounted for in the objective J.
 
-   Every normalisation constant below is a documented design choice for this demo, not a calibrated value. */
+   Every normalisation constant below is a documented design choice for this simulation, not a calibrated value. */
 const TTAP_CFG = {
   E_REF: 3.0,        // m: twin position error that counts as fully wrong (prediction_error = err / E_REF, clipped to 1)
   AGE_REF: 1.0,      // s: info age that counts as fully stale (sync_age_penalty = age / AGE_REF)
@@ -2062,7 +2062,7 @@ const horizonS = () => ttap.H * 0.1;
 
 // Live Grafana dashboard (optional, opt-in): POST each TwinTrust-AP cycle to the
 // Phase 3 backend's /api/v1/telemetry/live so a local Grafana dashboard can show
-// a live driving session. Off by default so the public demo never depends on a
+// a live driving session. Off by default so the public page never depends on a
 // backend being reachable. Enable with ?telemetry=1, point at a non-default
 // backend with &telemetryUrl=http://host:port (see backend/README.md in Aegis-V2X).
 const telemQP = new URLSearchParams(location.search);
@@ -2321,41 +2321,43 @@ let curTab='overview';
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{curTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
   document.querySelectorAll('.tabpanel').forEach(p=>{p.hidden=p.id!=='tab-'+curTab});sampleHist();renderLife();renderTTAP();if(curTab==='monitor')renderMonitor(true)}));
 
-/* ---------- Monitoring dashboard (demo data only) ----------
-   Entirely self-contained: a seeded random walk per series, never reading
-   from the simulation, the backend, or research/results/. Exists to show
-   what a production Grafana-style view of Aegis-V2X could look like. */
+/* ---------- Monitoring dashboard (Grafana-style, live) ----------
+   Every series is sampled once per second from the running simulation and the
+   TwinTrust-AP loop (ttap, twin, trustDB, chLinks). Nothing is generated. */
 const MON=(()=>{
-  let seedN=20261106>>>0;
-  const rnd=()=>{seedN=(seedN+0x6D2B79F5)|0;let t=Math.imul(seedN^seedN>>>15,1|seedN);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
   const SERIES=[
-    {key:'trust',label:'Trust Score',min:.72,max:.97,start:.86,step:.012,fmt:v=>v.toFixed(2),card:v=>v.toFixed(2),color:'#45e38f'},
-    {key:'latency',label:'Network Latency',min:12,max:48,start:24,step:1.6,fmt:v=>v.toFixed(0)+'ms',card:v=>v.toFixed(0)+' ms',color:'#22d3ee'},
-    {key:'conn',label:'Vehicle Connectivity',min:82,max:100,start:96,step:1.2,fmt:v=>v.toFixed(0)+'%',card:v=>v.toFixed(0)+'%',color:'#5aa9ff'},
-    {key:'beam',label:'Beam Adaptation Activity',min:0,max:14,start:5,step:1.8,fmt:v=>v.toFixed(0)+'/m',card:v=>v.toFixed(0)+'/min',color:'#f472b6'},
-    {key:'acc',label:'Prediction Accuracy',min:78,max:98,start:90,step:1.4,fmt:v=>v.toFixed(0)+'%',card:v=>v.toFixed(0)+'%',color:'#4c8dff'},
-    {key:'sync',label:'Synchronization Performance',min:7.5,max:10,start:9.2,step:.22,fmt:v=>v.toFixed(1)+'Hz',card:v=>v.toFixed(1)+' Hz',color:'#ffb648'},
-    {key:'horizon',label:'Prediction Horizon',min:.1,max:1,start:.5,step:.06,fmt:null,card:v=>v.toFixed(1)+' s',color:'#a78bfa'},
-    {key:'vehcount',label:'Vehicle Count',min:28,max:58,start:42,step:3,fmt:null,card:v=>Math.round(v)+'',color:'#cbd5e1'},
+    {key:'trust',label:'Twin Trust Score (calibrated T)',max:1,fmt:v=>v.toFixed(2),card:v=>v.toFixed(2),color:'#45e38f'},
+    {key:'latency',label:'V2X Information Age',max:1000,fmt:v=>v.toFixed(0)+'ms',card:v=>v.toFixed(0)+' ms',color:'#22d3ee'},
+    {key:'conn',label:'Vehicle Connectivity (PER < 50%)',max:100,fmt:v=>v.toFixed(0)+'%',card:v=>v.toFixed(0)+'%',color:'#5aa9ff'},
+    {key:'beam',label:'Beam Adaptation Activity',max:60,fmt:v=>v.toFixed(0)+'/m',card:v=>v.toFixed(0)+'/min',color:'#f472b6'},
+    {key:'acc',label:'Prediction Accuracy (vehicles within 1 m)',max:100,fmt:v=>v.toFixed(0)+'%',card:v=>v.toFixed(0)+'%',color:'#4c8dff'},
+    {key:'sync',label:'Synchronization Rate',max:60,fmt:v=>v.toFixed(1)+'/s',card:v=>v.toFixed(1)+' /s',color:'#ffb648'},
+    {key:'horizon',label:'Prediction Horizon',max:1,fmt:null,card:v=>v.toFixed(1)+' s',color:'#a78bfa'},
+    {key:'vehcount',label:'Vehicle Count',max:60,fmt:null,card:v=>Math.round(v)+'',color:'#cbd5e1'},
   ];
-  const STEP_MS=5000,POINTS=720; // 720*5s = 1h buffer; the time-range control just slices the tail
-  const buf={};
-  const walk=(prev,s)=>{const v=prev+(rnd()-.5)*2*s.step+(s.start-prev)*.025;return Math.min(s.max,Math.max(s.min,v))};
-  const seedBuf=()=>{const now=Date.now();for(const s of SERIES){let v=s.start;const arr=[];for(let i=POINTS-1;i>=0;i--){v=walk(v,s);arr.unshift({t:now-i*STEP_MS,v})}buf[s.key]=arr}};
-  seedBuf();
-  const names=['EGO-01','V2V-14','V2V-27','V2V-33','V2I-RSU-02','V2P-09','V2V-41','V2E-05'];
-  const vehicles=names.map(n=>({id:n,trust:.68+rnd()*.3,latency:14+rnd()*32,beam:rnd()>.55,sync:.84+rnd()*.15,ok:rnd()>.1}));
-  const kinds=[['ok','Beam re-aligned to predicted twin position'],['ok','Edge synchronization completed'],['warn','Latency spike observed on a V2V link (41 ms)'],['ok','Trust score recalibrated'],['warn','A vehicle link was briefly isolated'],['ok','Prediction horizon increased']];
-  const now0=Date.now();
-  const events=Array.from({length:8},(_,i)=>{const k=kinds[Math.floor(rnd()*kinds.length)];return{sev:k[0],msg:k[1],ts:now0-i*41000-Math.floor(rnd()*23000)}});
-  return{SERIES,buf,vehicles,events,rangeSec:300,auto:true,timer:null,
-    latest(key){const a=this.buf[key];return a[a.length-1].v},
-    step(){const now=Date.now();for(const s of SERIES){const arr=this.buf[s.key];const v=walk(arr[arr.length-1].v,s);arr.push({t:now,v});if(arr.length>POINTS)arr.shift()}},
+  const STEP_MS=1000,POINTS=3600; // 1 h of 1 s samples; the time-range control slices the tail
+  const buf={};for(const s of SERIES)buf[s.key]=[];
+  let prev=null,lastAct=null;const events=[];
+  const addEv=(sev,msg)=>{events.unshift({sev,msg,ts:Date.now()});if(events.length>8)events.pop()};
+  const vehRows=()=>{const rows=[];for(const tw of twin.values()){if(tw.kind!=='V2V'||tw.src!=='v2x')continue;const r=trustDB.get(tw.id)||{},c=chLinks.get(tw.id);
+      rows.push({id:tw.id,trust:Number.isFinite(r.trust)?r.trust:null,age:Math.max(0,(t-tw.tGen)*1000),beam:ttap.beams.has(tw.id),q:c&&Number.isFinite(c.per)?1-c.per:null,iso:!!r.isolated})}
+    return rows.sort((a,b)=>a.age-b.age).slice(0,8)};
+  return{SERIES,buf,events,vehicles:[],rangeSec:300,auto:true,timer:null,
+    latest(key){const a=this.buf[key];return a.length?a[a.length-1].v:null},
+    step(){const L=ttap.last;if(!L)return;const now=Date.now(),A=ttap.acc,rows=vehRows();this.vehicles=rows;
+      const links=rows.filter(r=>r.q!==null),dt=prev?Math.max(.2,t-prev.t):null;
+      const val={trust:L.T,latency:clamp(L.a,0,1)*1000,conn:links.length?100*links.filter(r=>r.q>=.5).length/links.length:null,
+        beam:dt?Math.max(0,A.beam-prev.beam)/dt*60:null,acc:L.correctV2V==null?null:L.correctV2V*100,
+        sync:dt?Math.max(0,A.sync-prev.sync)/dt:null,horizon:L.H*.1,vehcount:rows.length?[...twin.values()].filter(w=>w.kind==='V2V'&&w.src==='v2x').length:0};
+      for(const s of SERIES){const v=val[s.key];if(v==null||!Number.isFinite(v))continue;const arr=this.buf[s.key];arr.push({t:now,v});if(arr.length>POINTS)arr.shift()}
+      if(lastAct!==null&&L.action!==lastAct)addEv(L.action==='synchronize'?'warn':'ok',`Action: ${ACT_LABEL[L.action]||L.action} (trust ${L.T.toFixed(2)}, H ${L.H})`);
+      lastAct=L.action;for(const r of rows)if(r.iso&&!(this._iso||new Set()).has(r.id))addEv('warn',`${r.id} isolated by the trust estimator`);
+      this._iso=new Set(rows.filter(r=>r.iso).map(r=>r.id));prev={t,beam:A.beam,sync:A.sync}},
     slice(key){const n=Math.max(2,Math.round(this.rangeSec/(STEP_MS/1000)));return this.buf[key].slice(-n)}};
 })();
 function monFmtTime(ts){return new Date(ts).toLocaleTimeString([],{hour12:false})}
 function monChart(c,points,color,fmt){const d=sizeCanvas(c);if(!d||points.length<2)return;const g=c.getContext('2d');const W=c.width,H=c.height;g.clearRect(0,0,W,H);
-  const vals=points.map(p=>p.v);let mn=Math.min(...vals),mx=Math.max(...vals);if(mx-mn<1e-6){mx+=.5;mn-=.5}
+  const vals=points.map(p=>p.v);let mn=Math.min(...vals),mx=Math.max(...vals);if(mx-mn<1e-6){mx+=.5;mn=mn>=0?Math.max(0,mn-.5):mn-.5}
   const padL=4*d,padR=4*d,padT=8*d,padB=15*d;const xs=i=>padL+i/(points.length-1)*(W-padL-padR),ys=v=>H-padB-(v-mn)/(mx-mn)*(H-padT-padB);
   g.strokeStyle='rgba(132,151,178,.14)';g.lineWidth=1;for(const f of[0,.5,1]){const y=padT+(H-padT-padB)*f;g.beginPath();g.moveTo(padL,y);g.lineTo(W-padR,y);g.stroke()}
   const gr=g.createLinearGradient(0,padT,0,H-padB);gr.addColorStop(0,color+'4d');gr.addColorStop(1,color+'00');
@@ -2367,34 +2369,34 @@ function monChart(c,points,color,fmt){const d=sizeCanvas(c);if(!d||points.length
   g.textAlign='right';g.fillText(monFmtTime(points[points.length-1].t),W-padR,H-4*d)}
 function monBuildOnce(){
   $('monCharts').innerHTML=MON.SERIES.filter(s=>s.fmt).map(s=>`<article class="card monchart"><header class="ph"><h2><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>${s.label}</h2>
-    <div class="mv"><b id="monV_${s.key}">—</b><span>live demo value</span></div></header>
+    <div class="mv"><b id="monV_${s.key}">—</b><span>live value</span></div></header>
     <canvas id="monC_${s.key}"></canvas>
-    <div class="legend"><i style="background:${s.color}"></i>${s.label} · sample feed, not measured</div></article>`).join('');
-  $('monStats').innerHTML=[['vehcount','Vehicle Count','connected (demo)'],['trust','Average Trust Score','calibrated T (demo)'],['latency','Average Latency','one-way (demo)'],
-    ['beam','Beam Switches','rolling rate (demo)'],['horizon','Prediction Horizon','TAHS-style (demo)'],['sync','Synchronization Rate','edge sync (demo)']]
+    <div class="legend"><i style="background:${s.color}"></i>${s.label} · live, sampled every 1 s</div></article>`).join('');
+  $('monStats').innerHTML=[['vehcount','Vehicle Count','V2X vehicles in the twin'],['trust','Twin Trust Score','calibrated T'],['latency','Information Age','V2X, mean'],
+    ['beam','Beam Switches','per minute'],['horizon','Prediction Horizon','TAHS'],['sync','Synchronization Rate','edge syncs per second']]
     .map(([k,label,sub])=>`<div class="tile"><small>${label}</small><div class="n" id="monN_${k}">—</div><div class="s">${sub}</div><canvas id="monS_${k}"></canvas></div>`).join('');
   document.querySelectorAll('#monRange button').forEach(b=>b.addEventListener('click',()=>{MON.rangeSec=+b.dataset.range;document.querySelectorAll('#monRange button').forEach(x=>x.classList.toggle('on',x===b));renderMonitor(true)}));
   $('monAuto').addEventListener('click',()=>{MON.auto=!MON.auto;$('monAuto').classList.toggle('on',MON.auto);monScheduleAuto()});
-  $('monRefresh').addEventListener('click',()=>{MON.step();renderMonitor(true)});
+  $('monRefresh').addEventListener('click',()=>renderMonitor(true));
 }
-function monScheduleAuto(){if(MON.timer){clearInterval(MON.timer);MON.timer=null}if(MON.auto)MON.timer=setInterval(()=>{MON.step();renderMonitor()},3000)}
+function monScheduleAuto(){if(MON.timer){clearInterval(MON.timer);MON.timer=null}if(MON.auto)MON.timer=setInterval(()=>renderMonitor(),1000)}
 function renderMonitor(force){if(curTab!=='monitor'&&!force)return;if(!$('monCharts').children.length)monBuildOnce();
   $('monUpdated').textContent=monFmtTime(Date.now());
-  for(const k of['vehcount','trust','latency','beam','horizon','sync']){const s=MON.SERIES.find(x=>x.key===k),v=MON.latest(k);$('monN_'+k).textContent=s.card(v);
+  for(const k of['vehcount','trust','latency','beam','horizon','sync']){const s=MON.SERIES.find(x=>x.key===k),v=MON.latest(k);$('monN_'+k).textContent=v==null?'—':s.card(v);
     const sp=$('monS_'+k);if(sp)spark(sp,MON.buf[k].slice(-120).map(p=>p.v),s.max,s.color)}
-  for(const s of MON.SERIES){if(!s.fmt)continue;const pts=MON.slice(s.key);const c=$('monC_'+s.key);if(!c)continue;monChart(c,pts,s.color,s.fmt);$('monV_'+s.key).textContent=s.card(MON.latest(s.key))}
-  $('monVehBody').innerHTML=MON.vehicles.map(v=>`<tr><td>${v.id}</td><td>${(v.trust*100).toFixed(0)}%</td><td>${v.latency.toFixed(0)} ms</td><td>${v.beam?'Active':'Idle'}</td><td>${(v.sync*100).toFixed(0)}%</td>
-    <td><span class="pill ${v.ok?'ok':'warn'}">${v.ok?'Healthy':'Degraded'}</span></td></tr>`).join('');
-  const healthy=MON.vehicles.filter(v=>v.ok).length;
-  $('monHealth').innerHTML=`<dt>Overall status</dt><dd>${healthy===MON.vehicles.length?'All systems nominal (demo)':'Degraded link (demo)'}</dd>
-    <dt>Backend reachability</dt><dd>Not applicable (demo)</dd><dt>Prometheus scrape</dt><dd>Not applicable (demo)</dd>
-    <dt>Grafana datasource</dt><dd>Not applicable (demo)</dd><dt>Sample size</dt><dd>${MON.vehicles.length} vehicles</dd>
+  for(const s of MON.SERIES){if(!s.fmt)continue;const pts=MON.slice(s.key);const c=$('monC_'+s.key);if(!c)continue;monChart(c,pts,s.color,s.fmt);const lv=MON.latest(s.key);$('monV_'+s.key).textContent=lv==null?'—':s.card(lv)}
+  const ok=v=>!v.iso&&(v.q===null||v.q>=.5);$('monVehBody').innerHTML=MON.vehicles.map(v=>`<tr><td>${v.id}</td><td>${v.trust==null?'—':(v.trust*100).toFixed(0)+'%'}</td><td>${v.age.toFixed(0)} ms</td><td>${v.beam?'Tracked':'Idle'}</td><td>${v.q==null?'—':(v.q*100).toFixed(0)+'%'}</td>
+    <td><span class="pill ${ok(v)?'ok':'warn'}">${v.iso?'Isolated':ok(v)?'Healthy':'Degraded'}</span></td></tr>`).join('')||'<tr><td colspan="6">No V2X vehicles in range yet</td></tr>';
+  const healthy=MON.vehicles.filter(ok).length,L=ttap.last||{};
+  $('monHealth').innerHTML=`<dt>Overall status</dt><dd>${healthy===MON.vehicles.length?'All links nominal':'Degraded link'}</dd>
+    <dt>Control policy</dt><dd>${ttap.mode==='fixed'?'Fixed policy':ttap.mode==='aoi'?'Age-of-information':'TwinTrust-AP'}</dd><dt>mmWave band</dt><dd>${CH.FC} GHz</dd>
+    <dt>FSDP state</dt><dd>${L.state||'—'}</dd><dt>Last action</dt><dd>${ACT_LABEL[L.action]||L.action||'—'}</dd>
     <dt>Healthy links</dt><dd>${healthy}/${MON.vehicles.length}</dd>`;
   $('monConnCount').textContent=healthy+'/'+MON.vehicles.length+' healthy';
-  $('monConn').innerHTML=MON.vehicles.map(v=>`<div class="connchip"><i class="${v.ok?'ok':'warn'}"></i><b>${v.id}</b><span>${(v.sync*100).toFixed(0)}% sync</span></div>`).join('');
-  $('monEvents').innerHTML=MON.events.map(e=>`<li><i style="background:${e.sev==='ok'?'#45e38f':'#ffb648'}"></i><b>${e.msg}</b><span>${monFmtTime(e.ts)} · demo event</span></li>`).join('');
+  $('monConn').innerHTML=MON.vehicles.map(v=>`<div class="connchip"><i class="${ok(v)?'ok':'warn'}"></i><b>${v.id}</b><span>${v.q==null?'no link':(v.q*100).toFixed(0)+'% link'}</span></div>`).join('');
+  $('monEvents').innerHTML=MON.events.map(e=>`<li><i style="background:${e.sev==='ok'?'#45e38f':'#ffb648'}"></i><b>${e.msg}</b><span>${monFmtTime(e.ts)}</span></li>`).join('');
 }
-monScheduleAuto();
+setInterval(()=>MON.step(),1000);monScheduleAuto();
 
 /* ---------- TwinTrust-AP tab ---------- */
 const ACT_LABEL={synchronize:'Synchronize',predict:'Predict',beam_switch:'Beam switch',reduce_horizon:'Reduce horizon',increase_horizon:'Increase horizon',maintain_state:'Maintain state'};
@@ -2470,7 +2472,7 @@ function toggleAlerts(){initAudio();alertsOn=!alertsOn;if(audio&&audio.ac.state=
 function renderStatus(){const f=[fault.spoof&&`spoof ${fault.spoof.id}`,fault.loss&&'loss 60%',fault.lidar&&'LiDAR degraded',fault.lat&&'latency +300 ms'].filter(Boolean);
   const rows=[['Simulation',`running · ${fmtT(t)}`],['Environment',DIST[curDistrict||'midtown']],['Time of day',tod],['Traffic',`${vehicles.length} vehicles · ${peds.length} pedestrians`],
     ['Active faults',f.length?f.join(', '):'none'],['Alert sounds',alertsOn?(audio?'on':'on · click the view once to enable audio'):'muted'],['Engine sound',soundOn?'on':'off'],
-    ['Weather',WX[wxMode].label+' (visual only)'],['Render time',`road ${perf.phys.toFixed(1)} ms · twin ${perf.twin.toFixed(1)} ms · ${Math.round(perf.fps)} fps`],['Graphics',`pixel ratio road ×${R1.getPixelRatio()} · twin ×${R2.getPixelRatio()} · ${gfx.resizes} resizes · ${gfx.lost} context losses`],['Trust source','in-browser Beta reputation'],['Backend / edge','not connected (standalone demo)']];
+    ['Weather',WX[wxMode].label+' (visual only)'],['Render time',`road ${perf.phys.toFixed(1)} ms · twin ${perf.twin.toFixed(1)} ms · ${Math.round(perf.fps)} fps`],['Graphics',`pixel ratio road ×${R1.getPixelRatio()} · twin ×${R2.getPixelRatio()} · ${gfx.resizes} resizes · ${gfx.lost} context losses`],['Trust source','in-browser Beta reputation'],['Backend / edge','not connected (standalone page)']];
   $('sysStatus').innerHTML=rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}
 
 /* ---------- twin coordinate rulers (X east, Y north) ---------- */
@@ -2501,8 +2503,8 @@ function renderTwinTab(){if(curTab!=='twin')return;const m=metrics;let nv=0,nl=0
 /* ---------- per-source message delivery (for the inspector) ---------- */
 const deliv=new Map();function delivNote(id,ok){let d=deliv.get(id);if(!d){d={pdr:1,ok:0,lost:0};deliv.set(id,d)}d.pdr=d.pdr*.95+(ok?.05:0);if(ok)d.ok++;else d.lost++}
 
-/* ---------- TAHS (documented formula, demo parameters) ---------- */
-// H = Hmin + (Hmax − Hmin)·σ(βT − γC), discretised to {1,2,3,5,8,10}. β, γ, Hmin, Hmax are demo values;
+/* ---------- TAHS (documented formula, design parameters) ---------- */
+// H = Hmin + (Hmax − Hmin)·σ(βT − γC), discretised to {1,2,3,5,8,10}. β, γ, Hmin, Hmax are design values;
 // the backend's tuned parameters are not available in this standalone page.
 const TAHS={b:6,g:6,hmin:1,hmax:10,set:[1,2,3,5,8,10]};
 function tahs(T,C){if(!Number.isFinite(T)||!Number.isFinite(C))return null;const h=TAHS.hmin+(TAHS.hmax-TAHS.hmin)/(1+Math.exp(-(TAHS.b*T-TAHS.g*C)));return TAHS.set.reduce((a,b)=>Math.abs(b-h)<Math.abs(a-h)?b:a)}
@@ -2588,7 +2590,7 @@ function renderInspector(){const box=$('insp'),hint=$('inspHint');
     ${(()=>{const e=TS.get(n.id);return`<div><small>Trust Score</small><b class="${e&&e.value<50?'low':''}">${e?Math.round(e.value)+'%':'—'}</b><span>${e?`${e.main} · t ${e.t.toFixed(1)} s`:'not yet scored 130 m'}</span></div>`})()}
     <div><small>V2X message trust</small><b class="${R_.trust.state==='ok'&&R_.trust.v<.5?'low':''}">${R_.trust.state==='ok'?Math.round(R_.trust.v*100)+'%':'—'}</b><span>${R_.trust.txt}</span></div>
     <div><small>Criticality vs ego</small><b>${Math.round(R_.C*100)}%</b><span>${Number.isFinite(R_.ttc)?`closest-approach TTC ${R_.ttc.toFixed(1)} s`:'no predicted conflict'}</span></div>
-    <div><small>TAHS horizon</small><b>${R_.H??'—'}</b><span>${R_.H?'intervals · demo β = γ = 6':R_.trust.state==='ok'?'unavailable':'needs a trust value'}</span></div>
+    <div><small>TAHS horizon</small><b>${R_.H??'—'}</b><span>${R_.H?'intervals · design β = γ = 6':R_.trust.state==='ok'?'unavailable':'needs a trust value'}</span></div>
     <div><small>Message delivery</small><b>${R_.deliv?Math.round(R_.deliv.pdr*100)+'%':'—'}</b><span>${R_.deliv?`latency ${Math.round(R_.deliv.lat)} ms · last ${R_.deliv.last.toFixed(1)} s ago`:'no messages from this source'}</span></div>
     <div><small>Collision status</small><b class="${R_.coll==='Clear'?'':'low'}">${R_.coll.split(' · ')[0]}</b><span>${R_.coll.split(' · ')[1]||'no predicted conflict with ego'}</span></div>
    </div>`}
