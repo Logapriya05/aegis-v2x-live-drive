@@ -1518,18 +1518,12 @@ const egoV=buildPhysVehicle('sedan',0x1d4fd8,{plate:'TN 01 AV 2026'});const egoG
   const stripe=new THREE.MeshStandardMaterial({color:0x22d3ee,emissive:0x0ea5c6,emissiveIntensity:.5,roughness:.3});
   for(const sx of[-1,1]){const b=new THREE.Mesh(UG.box,stripe);b.scale.set(.012,.05,3.6);b.position.set(sx*.928,.5,0);egoG.add(b)}
   const lid=new THREE.Mesh(UG.cyl,new THREE.MeshStandardMaterial({color:0x15181d,metalness:.4,roughness:.35}));lid.scale.set(.32,.16,.32);lid.position.set(0,1.53,.05);egoG.add(lid);
-  // floating name tag above the ego (faces the camera), so the Aegis-V2X vehicle is easy to find in traffic
-  const tagC=mkCanvas(512,128),tg=tagC.getContext('2d');tg.fillStyle='rgba(11,26,58,.88)';tg.beginPath();tg.roundRect(8,14,496,100,50);tg.fill();tg.lineWidth=6;tg.strokeStyle='#22d3ee';tg.stroke();
-  tg.fillStyle='#fff';tg.font='800 64px sans-serif';tg.textAlign='center';tg.textBaseline='middle';tg.fillText('Aegis-V2X',256,66);
-  const tagT=toTex(tagC);tagT.wrapS=tagT.wrapT=THREE.ClampToEdgeWrapping;const tag=new THREE.Sprite(new THREE.SpriteMaterial({map:tagT,transparent:true,depthWrite:false}));tag.scale.set(2.6,.65,1);tag.position.set(0,2.55,0);tag.renderOrder=3;egoG.add(tag);
   const ring=new THREE.Mesh(UG.cyl,new THREE.MeshStandardMaterial({color:0x22d3ee,emissive:0x22d3ee,emissiveIntensity:.8}));ring.scale.set(.335,.03,.335);ring.position.set(0,1.56,.05);egoG.add(ring)})();
 egoG.add(new THREE.Mesh(UG.box,new THREE.MeshStandardMaterial({color:0x38d6ff,emissive:0x38d6ff,emissiveIntensity:.8})));egoG.children[egoG.children.length-1].scale.set(1.86,.03,2.4);egoG.children[egoG.children.length-1].position.set(0,.66,0);
 const haloMat=new THREE.MeshBasicMaterial({color:0x38d6ff,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false});
 const halo=new THREE.Mesh(new THREE.RingGeometry(2.7,2.9,64).rotateX(-PI/2),haloMat);halo.position.y=.04;scene.add(halo);
 const heads=[-.62,.62].map(x=>{const s=new THREE.SpotLight(0xfff2d8,0,70,.48,.55,1.2);s.position.set(x,.8,-2.2);const tgt=new THREE.Object3D();tgt.position.set(x*3,0,-25);egoG.add(s,tgt);s.target=tgt;return s});
 const egoT=buildTwinVehicle('sedan',0x38d6ff);egoT.fill.opacity=.2;tscene.add(egoT.g);
-{const c=mkCanvas(512,128),g=c.getContext('2d');g.fillStyle='rgba(8,20,40,.85)';g.beginPath();g.roundRect(8,14,496,100,50);g.fill();g.lineWidth=6;g.strokeStyle='#38d6ff';g.stroke();g.fillStyle='#38d6ff';g.font='800 60px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('Aegis-V2X · ego',256,66);
-  const tx=toTex(c);tx.wrapS=tx.wrapT=THREE.ClampToEdgeWrapping;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false}));sp.scale.set(2.9,.72,1);sp.position.set(0,2.55,0);egoT.g.add(sp)}
 const tHalo=new THREE.Mesh(new THREE.RingGeometry(2.7,2.95,64).rotateX(-PI/2),new THREE.MeshBasicMaterial({color:0x38d6ff,transparent:true,opacity:.7,depthWrite:false}));tHalo.position.y=.05;tscene.add(tHalo);
 const tWaveM=new THREE.MeshBasicMaterial({color:0x38d6ff,transparent:true,opacity:.5,depthWrite:false});const tWave=new THREE.Mesh(new THREE.RingGeometry(.97,1,64).rotateX(-PI/2),tWaveM);tWave.position.y=.05;tscene.add(tWave);
 const sweepM=new THREE.MeshBasicMaterial({color:0x38d6ff,transparent:true,opacity:.10,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending});
