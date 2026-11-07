@@ -1025,27 +1025,48 @@ function finishModel(name,def){const byRole={};const tfill=[],tedge=[];
     P(UG.cyl,'chrome',1.2,.9,-1.6,.5,1.1,.5,0,PI/2),P(UG.cyl,'chrome',-1.0,3.2,-2.4,.14,1.4,.14),BX('black',.5,.6,.04,-1.0,.6,4.5),BX('black',.5,.6,.04,1.0,.6,4.5),
     BX('light',.4,.16,.06,-.9,1.0,-4.73),BX('light',.4,.16,.06,.9,1.0,-4.73),BX('tail',.3,.3,.05,-1.0,1.0,4.62),BX('tail',.3,.3,.05,1.0,1.0,4.62),
     BX('black',.08,.4,.25,-1.35,2.4,-4.4),BX('black',.08,.4,.25,1.35,2.4,-4.4),BX('plate',.52,.13,.02,0,.75,-4.78),BX('plate',.52,.13,.02,0,.75,4.65)]});
+  // motorbike with rider (two wheels on the centre line)
+  finishModel('bike',{len:2.05,wid:.8,top:1.62,two:true,wheels:{r:.31,w:.11,x:0,z:[-.72,.7]},parts:[
+    BX('paint',.3,.24,.56,0,.86,-.18),BX('black',.26,.12,.62,0,.92,.32),BX('black',.12,.42,1.3,0,.58,0),BX('chrome',.06,.06,.5,.16,.42,.42),
+    BX('black',.06,.5,.06,0,.82,-.68,.35),BX('chrome',.62,.04,.04,0,1.08,-.58),P(UG.cyl,'light',0,1.0,-.74,.13,.06,.13,0,PI/2),BX('tail',.12,.06,.04,0,.88,.66),BX('plate',.2,.1,.02,0,.74,.74),
+    BX('rider',.42,.56,.28,0,1.24,.18,-.25),BX('rider',.12,.42,.12,-.2,1.14,-.16,-.9),BX('rider',.12,.42,.12,.2,1.14,-.16,-.9),BX('rider',.14,.5,.16,-.17,.74,.0,.5),BX('rider',.14,.5,.16,.17,.74,.0,.5),
+    P(UG.sphere,'helmet',0,1.62,.12,.26,.28,.3)]});
+  // minivan / tempo traveller
+  const vanBody=bodyWithArches([[-2.7,.55],[-2.78,.7],[-2.6,1.1],[-2.0,1.3],[2.65,1.3],[2.72,.7],[2.68,.55]],.36,[[-1.75,.42],[1.85,.42]]);
+  finishModel('van',{len:5.5,wid:1.98,top:2.45,wheels:{r:.36,w:.24,x:.84,z:[-1.75,1.85]},parts:[
+    P(extrudeSide(vanBody,1.98,.07),'paint'),BX('paint',1.98,1.05,4.6,0,1.85,.42),BX('glass',2.0,.55,4.1,0,1.85,.55),BX('glass',1.8,.75,.05,0,1.75,-1.92,-.35),
+    BX('paint',1.9,.08,4.7,0,2.42,.42),BX('black',1.7,.24,4.6,0,.38,0),BX('tail',.2,.5,.05,-.85,1.25,2.74),BX('tail',.2,.5,.05,.85,1.25,2.74),
+    BX('black',.05,1.0,.05,-1.0,1.9,-.6),BX('black',.05,1.0,.05,1.0,1.9,-.6),BX('black',.05,1.0,.05,-1.0,1.9,1.1),BX('black',.05,1.0,.05,1.0,1.9,1.1),
+    ...carCommon(5.5,1.98,.42,[])]});
+  // light goods pickup (open load bed)
+  const pickBody=bodyWithArches([[-1.95,.55],[-2.0,.7],[-1.9,1.0],[-.6,1.05],[-.6,.55]],.34,[[-1.3,.42]]);
+  finishModel('pickup',{len:4.0,wid:1.66,top:2.0,wheels:{r:.33,w:.2,x:.72,z:[-1.3,1.25]},parts:[
+    P(extrudeSide(pickBody,1.66,.06),'paint'),BX('paint',1.62,1.0,1.25,0,1.48,-1.3),BX('glass',1.5,.6,.05,0,1.6,-1.95,-.15),BX('glass',.04,.5,.7,.82,1.6,-1.3),BX('glass',.04,.5,.7,-.82,1.6,-1.3),
+    BX('box',1.66,.08,2.4,0,.9,.75),BX('paint',.06,.5,2.4,-.8,1.15,.75),BX('paint',.06,.5,2.4,.8,1.15,.75),BX('paint',1.66,.5,.06,0,1.15,1.95),BX('paint',1.66,.6,.06,0,1.2,-.42),
+    BX('black',1.3,.22,3.6,0,.5,0),BX('light',.3,.14,.06,-.6,1.1,-2.0),BX('light',.3,.14,.06,.6,1.1,-2.0),BX('tail',.18,.24,.05,-.72,1.0,1.98),BX('tail',.18,.24,.05,.72,1.0,1.98),
+    BX('plate',.42,.12,.02,0,.75,-2.02),BX('plate',.42,.12,.02,0,.8,1.99),BX('black',1.66,.2,.24,0,.55,-1.95)]});
 })();
 const PAINT=[0xe9e9e6,0xb1b5ba,0x1b1d21,0x5c6168,0x8e1d1d,0x1f3c6a,0xc9b99b,0x2f5d4a,0xeeeeee,0x3a3d42,0x6a1f2b,0x2d4f6e];
 const VM={glass:new THREE.MeshStandardMaterial({color:0x0c1218,metalness:.3,roughness:.12,envMapIntensity:.45}),
   chrome:new THREE.MeshStandardMaterial({color:0xd8dce0,metalness:1,roughness:.18}),black:M(0x111214,{roughness:.7}),tire:M(0x121212,{roughness:.92}),
   rim:new THREE.MeshStandardMaterial({color:0xb9bdc2,metalness:.9,roughness:.28}),light:new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff6e0,emissiveIntensity:.6,roughness:.1}),
-  amber:new THREE.MeshStandardMaterial({color:0xffa31a,emissive:0xff8a00,emissiveIntensity:.3}),box:new THREE.MeshStandardMaterial({color:0xe2e1dc,map:contTex,roughness:.55})};
+  amber:new THREE.MeshStandardMaterial({color:0xffa31a,emissive:0xff8a00,emissiveIntensity:.3}),box:new THREE.MeshStandardMaterial({color:0xe2e1dc,map:contTex,roughness:.55}),
+  rider:M(0x3a4250,{roughness:.8}),helmet:new THREE.MeshStandardMaterial({color:0x1b1d21,metalness:.2,roughness:.25})};
 function buildPhysVehicle(type,color,opts={}){const m=MODELS[type],g=new THREE.Group();
   const paint=new THREE.MeshPhysicalMaterial({color,metalness:.45,roughness:.32,clearcoat:1,clearcoatRoughness:.06,envMapIntensity:1.1});
   const tail=new THREE.MeshStandardMaterial({color:0x6a0c0c,emissive:0x5a0808,emissiveIntensity:.6});
-  const plate=new THREE.MeshStandardMaterial({map:plateTex(opts.plate||plateText(),type==='bus'||type==='truck'||type==='auto'),roughness:.5});
+  const plate=new THREE.MeshStandardMaterial({map:plateTex(opts.plate||plateText(),type==='bus'||type==='truck'||type==='auto'||type==='pickup'),roughness:.5});
   const dest=type==='bus'?new THREE.MeshBasicMaterial({map:destTex()}):null;
   for(const r in m.roles){const mat=r==='paint'?paint:r==='tail'?tail:r==='plate'?plate:r==='dest'?dest:VM[r];const me=new THREE.Mesh(m.roles[r],mat);
     if(r==='paint'||r==='box'||r==='glass'||r==='black'){me.castShadow=true}me.receiveShadow=r==='paint';g.add(me)}
   const W=m.wheels,wheels=[];const zs=m.three?[W.front,...W.z]:W.z;
-  for(const z of zs){const sides=m.three&&z===W.front?[0]:[-1,1];for(const s of sides){const piv=new THREE.Group();piv.position.set(s*W.x,W.r,z);const w=new THREE.Group();piv.add(w);
+  for(const z of zs){const sides=m.two||(m.three&&z===W.front)?[0]:[-1,1];for(const s of sides){const piv=new THREE.Group();piv.position.set(s*W.x,W.r,z);const w=new THREE.Group();piv.add(w);
     const tire=new THREE.Mesh(m.tire,VM.tire);tire.castShadow=true;const rim=new THREE.Mesh(m.rim,VM.rim);rim.scale.x=s<0?-1:1;w.add(tire,rim);g.add(piv);wheels.push({piv,w,front:z<0})}}
   return{g,len:m.len,wid:m.wid,top:m.top,tail,paint,plate,wheels,wheelR:W.r}}
 function buildTwinVehicle(type,col){const m=MODELS[type],g=new THREE.Group();
   const fill=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.22,depthWrite:false});const edge=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.95});
   g.add(new THREE.Mesh(m.tfill,fill),new THREE.LineSegments(m.tedge,edge));
-  const W=m.wheels;const zs=m.three?[W.front,...W.z]:W.z;for(const z of zs)for(const s of(m.three&&z===W.front?[0]:[-1,1])){const e=new THREE.LineSegments(m.tireEdge,edge);e.position.set(s*W.x,W.r,z);g.add(e)}
+  const W=m.wheels;const zs=m.three?[W.front,...W.z]:W.z;for(const z of zs)for(const s of(m.two||(m.three&&z===W.front)?[0]:[-1,1])){const e=new THREE.LineSegments(m.tireEdge,edge);e.position.set(s*W.x,W.r,z);g.add(e)}
   const shadow=new THREE.Mesh(UG.plane,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.18,depthWrite:false}));shadow.scale.set(m.wid+.6,1,m.len+.6);shadow.position.y=.03;g.add(shadow);
   return{g,fill,edge,shadow}}
 function addParkedCar(Pb,x,z,ry){const type=pick(['sedan','hatch','suv']);const m=MODELS[type];const base=mtx(x,.16,z,1,1,1,ry);const pk='parked'+rint(0,6);
@@ -1378,10 +1399,10 @@ function spawnVehicle(n,initial){const ei=Math.round(ego.x/B),ej=Math.round(ego.
 const blobTex=canvasTex(64,64,(g,w,h)=>{const gr=g.createRadialGradient(32,32,4,32,32,32);gr.addColorStop(0,'rgba(0,0,0,.75)');gr.addColorStop(.6,'rgba(0,0,0,.45)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,w,h)},false);
 const blobMat=new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false,opacity:.7});
 function addBlob(g,len,wid){const b=new THREE.Mesh(UG.plane,blobMat);b.scale.set(wid+1.0,1,len+.9);b.position.y=.025;b.renderOrder=1;g.add(b)}
-function createVehicle(){const r=Math.random();const type=r<.34?'sedan':r<.56?'hatch':r<.74?'suv':r<.84?'auto':r<.92?'bus':'truck';
-  const col=type==='bus'?pick([0x2d6fb0,0xc7362b,0x3b8a4f]):type==='truck'?pick([0xd9d6cf,0x2b4f8a,0xb33a2a]):type==='auto'?0xf2c418:pick(PAINT);
-  const pv=buildPhysVehicle(type,col);addBlob(pv.g,pv.len,pv.wid);setLayer(pv.g,L_PHYS);vehSeq++;const pre=type==='bus'?'BUS':type==='truck'?'TRK':type==='auto'?'AUTO':'CAR';
-  const n={id:`${pre}-${String(vehSeq).padStart(2,'0')}`,type,kind:'V2V',...pv,v0:type==='bus'||type==='truck'?rnd(9,11):type==='auto'?rnd(8,10):rnd(11,14.5),v:0,vf:1,connected:Math.random()<.86,nextTx:Math.random()*.1,malicious:false,spin:0};
+function createVehicle(){const r=Math.random();const type=r<.22?'sedan':r<.38?'hatch':r<.52?'suv':r<.62?'auto':r<.76?'bike':r<.83?'van':r<.89?'pickup':r<.95?'bus':'truck';
+  const col=type==='bus'?pick([0x2d6fb0,0xc7362b,0x3b8a4f]):type==='truck'?pick([0xd9d6cf,0x2b4f8a,0xb33a2a]):type==='auto'?0xf2c418:type==='pickup'?pick([0xeeeeee,0x2b4f8a,0x3b8a4f,0xd9d6cf]):type==='bike'?pick([0x1b1d21,0x8e1d1d,0x1f3c6a,0xb1b5ba,0xd06a1a]):pick(PAINT);
+  const pv=buildPhysVehicle(type,col);addBlob(pv.g,pv.len,pv.wid);setLayer(pv.g,L_PHYS);vehSeq++;const pre=type==='bus'?'BUS':type==='truck'?'TRK':type==='auto'?'AUTO':type==='bike'?'BIKE':type==='van'?'VAN':type==='pickup'?'LGV':'CAR';
+  const n={id:`${pre}-${String(vehSeq).padStart(2,'0')}`,type,kind:'V2V',...pv,v0:type==='bus'||type==='truck'?rnd(9,11):type==='auto'?rnd(8,10):type==='bike'?rnd(11,15):type==='pickup'||type==='van'?rnd(10,12.5):rnd(11,14.5),v:0,vf:1,connected:Math.random()<.86,nextTx:Math.random()*.1,malicious:false,spin:0};
   scene.add(n.g);n.g.visible=false;vehPool.push(n)}
 function activateVehicle(initial){const n=vehPool.pop();if(!n)return false;if(!spawnVehicle(n,initial)){vehPool.push(n);return false}n.g.visible=true;vehicles.push(n);return true}
 function deactivateVehicle(n){const i=vehicles.indexOf(n);if(i<0)return;vehicles.splice(i,1);n.g.visible=false;trustDB.delete(n.id);twin.delete(n.id);if(fault.spoof===n){fault.spoof=null;n.malicious=false;setFaultUI()}vehPool.push(n)}
@@ -1432,7 +1453,7 @@ function updateVehicles(dt){
 }
 let densT=0;
 function manageDensity(){const P=DPROF[curDistrict||'midtown'];
-  const vt=clamp(Math.round(44*P.dens),16,54);if(vehicles.length<vt)activateVehicle(false);
+  const vt=clamp(Math.round(58*P.dens),20,70);if(vehicles.length<vt)activateVehicle(false);
   else if(vehicles.length>vt){let far=null,fd=130;for(const n of vehicles){const d=Math.hypot(n.x-ego.x,n.z-ego.z);if(d>fd&&n!==fault.spoof){fd=d;far=n}}if(far)deactivateVehicle(far)}
   const pt=clamp(Math.round(30*P.peds),4,44);if(peds.length<pt)activatePed(false);
   else if(peds.length>pt){let far=null,fd=70;for(const p of peds){const d=Math.hypot(p.x-ego.x,p.z-ego.z);if(d>fd){fd=d;far=p}}if(far)deactivatePed(far)}}
@@ -2795,8 +2816,8 @@ portraitMQ.addEventListener?portraitMQ.addEventListener('change',()=>setView(vmo
 // Pixel ratio is fixed for the session (no runtime down-scaling: changing it re-allocates and clears the canvas).
 for(const [Rr,name] of[[R1,'road view'],[R2,'twin view']]){Rr.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();gfx.lost++;logEvent('bad',`Graphics context lost · ${name}`,'the browser reclaimed the GPU context; waiting for it to be restored')},false);
   Rr.domElement.addEventListener('webglcontextrestored',()=>{logEvent('ok',`Graphics context restored · ${name}`,'');resize(true)},false)}
-applyTod('day');updateChunks(true);for(let i=0;i<54;i++)createVehicle();for(let i=0;i<46;i++)createPed();curDistrict=districtOf(Math.floor(ego.x/B),Math.floor(ego.z/B));
-for(let i=0;i<Math.round(44*DPROF[curDistrict].dens);i++)activateVehicle(true);for(let i=0;i<Math.round(30*DPROF[curDistrict].peds);i++)activatePed(true);renderStatus();
+applyTod('day');updateChunks(true);for(let i=0;i<72;i++)createVehicle();for(let i=0;i<46;i++)createPed();curDistrict=districtOf(Math.floor(ego.x/B),Math.floor(ego.z/B));
+for(let i=0;i<Math.round(58*DPROF[curDistrict].dens);i++)activateVehicle(true);for(let i=0;i<Math.round(30*DPROF[curDistrict].peds);i++)activatePed(true);renderStatus();
 logEvent('info','EGO-01 online','OBU broadcasting CAM at 10 Hz');
 for(const o of[halo,vrP,selRingP])setLayer(o,L_PHYS);for(const l of pArcs.arr)setLayer(l,L_PHYS);for(const p of pPul.arr)setLayer(p.m,L_PHYS);applyTwinStyle();renderLife();setFaultUI();
 let last=performance.now(),uiT=0,histT=0,saveT=0,txT=0,sessStart=Date.now();
@@ -2821,7 +2842,7 @@ function frame(now){requestAnimationFrame(frame);gfx.booted=true;const dt=Math.m
 addEventListener('pagehide',saveLife);
 function togglePause(){paused=!paused;const b=$('pauseBtn');b.textContent=paused?'Resume':'Pause';b.classList.toggle('on',paused);const pt=$('pausedTag');pt.hidden=!paused;pt.textContent=`Paused · sim t ${t.toFixed(1)} s`;
   logEvent('info',paused?'Simulation paused':'Simulation resumed',`sim t ${t.toFixed(2)} s`);renderTrustCard();renderGlance()}
-window.__aegis={CH,twinPos,gruHist,gruOut,get twinMap(){return twin},chLinks,gruForward,gruFeatures,GRU_W,ttap,TTAP_CFG,TT,fastForward,simStep,get crit(){return crit},get t(){return t},keys,TS,get crit(){return crit},scoreView,setScoreMode,togglePause,get paused(){return paused},gfx,screenPick,R1,R2,get lastColl(){return lastColl},setWeather,updateWeather,wx,ttcById,twin,twinObjs,get selId(){return selId},updateSafety,laneEval,alertsLog:()=>[...document.querySelectorAll('#alertList li')].slice(0,8).map(l=>l.textContent.trim().slice(0,110)),startErratic,SAF,toggleTwinStyle,perf,selectVehicle,raiseAlert,readings:id=>{const n=vehicles.find(v=>v.id===id);return n&&vehicleReadings(n)},lowtrust:()=>[...trustDB.values()].filter(r=>r.low).map(r=>r.id),trustAgg:()=>trustAgg,pred:()=>pred,toggleFault,trustDB,egoG,ego,vehicles,peds,chunks,applyTod,setCam:m=>{camMode=m},districtOf,load:()=>updateChunks(true),
+window.__aegis={get vehicles(){return vehicles},CH,twinPos,gruHist,gruOut,get twinMap(){return twin},chLinks,gruForward,gruFeatures,GRU_W,ttap,TTAP_CFG,TT,fastForward,simStep,get crit(){return crit},get t(){return t},keys,TS,get crit(){return crit},scoreView,setScoreMode,togglePause,get paused(){return paused},gfx,screenPick,R1,R2,get lastColl(){return lastColl},setWeather,updateWeather,wx,ttcById,twin,twinObjs,get selId(){return selId},updateSafety,laneEval,alertsLog:()=>[...document.querySelectorAll('#alertList li')].slice(0,8).map(l=>l.textContent.trim().slice(0,110)),startErratic,SAF,toggleTwinStyle,perf,selectVehicle,raiseAlert,readings:id=>{const n=vehicles.find(v=>v.id===id);return n&&vehicleReadings(n)},lowtrust:()=>[...trustDB.values()].filter(r=>r.low).map(r=>r.id),trustAgg:()=>trustAgg,pred:()=>pred,toggleFault,trustDB,egoG,ego,vehicles,peds,chunks,applyTod,setCam:m=>{camMode=m},districtOf,load:()=>updateChunks(true),
   go:d=>{for(let r=0;r<6;r++)for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++)if(districtOf(i,j)===d){ego.x=i*B+1.75;ego.z=j*B+B*.75;ego.psi=0;ego.v=0;updateChunks(true);return d+' '+i+','+j}return 'none'}};
 requestAnimationFrame(frame);
 })();
