@@ -657,7 +657,7 @@ table.safe td{white-space:normal}table.safe tr{cursor:pointer}table.safe tr.sel{
             <p class="fine" id="ttPolNote"></p></article>
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Resource use</h3><span class="sub" id="ttAccSub">since the last mode switch</span><button type="button" class="ttreset" id="ttReset">Reset</button></header>
             <div class="stats ttacc" id="ttAcc"></div>
-            <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded test runs (3 seed sets × 8 conditions × 150 s, 3GPP channel at 30 GHz, GRU predictor), TwinTrust-AP cut J by 40% against the fixed policy (0.083 vs 0.139) and by 41% against an age-of-information baseline (0.142). It used 31% fewer syncs (30.6 vs 44.5 per second) and 33% less modelled energy, but the vehicle twin was correct 7 points less often (78.6% vs 85.8%). J stays lowest at 15 and 100 GHz (−45% and −16%). Details in research/README.md.</p></article>
+            <p class="fine">J = 0.25·info age + 0.20·energy + 0.20·sync overhead + 0.20·beam failures − 0.15·twin correctness (configs/model.yaml). Lower is better. Switch between the two policies under the same faults to compare them. In recorded test runs (3 seed sets × 8 conditions × 150 s, 3GPP channel at 30 GHz, GRU predictor), TwinTrust-AP cut J by 60% against the fixed policy (0.056 vs 0.139) and by 61% against an age-of-information baseline (0.142). It used 60% fewer syncs (17.9 vs 44.5 object updates per second) and 43% less modelled energy, and the vehicle twin was correct as often (88.2% vs 85.8%; the difference is within the confidence interval). J stays lowest at 15 and 100 GHz (−58% and −30%). Details in research/README.md.</p></article>
           <article class="card"><header><h3><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>Recorded results</h3><span class="sub">3 seed sets × 8 conditions × 150 s per policy · trust calibration error 0.04–0.05 on these runs</span></header>
             <div class="ttres" style="overflow-x:auto"><table class="ttpol"><thead><tr><th>Band</th><th>Policy</th><th>J ↓</th><th>Syncs/s</th><th>Twin correct</th></tr></thead><tbody>
             <tr><th rowspan="3">15 GHz</th><td><b>TwinTrust-AP</b></td><td><b>0.055</b></td><td><b>16.0</b></td><td><b>89.0%</b></td></tr><tr><td>Fixed policy</td><td>0.132</td><td>44.4</td><td>87.5%</td></tr><tr><td>Age-of-information 0.5 s</td><td>0.139</td><td>113.7</td><td>89.0%</td></tr>
@@ -2079,6 +2079,11 @@ const TTAP_CFG = {
   AGE_FLOOR: true, // TwinTrust-AP age bridging: prediction always on, horizon >= mean information age (headless env AGE_FLOOR=0 for the ablation)
   DT_BEAM: true,   // TwinTrust-AP: twin-aided beam tracking between sweeps (headless env DT_BEAM=0 for the ablation)
   AOI: { H: 5, thrS: 0.5 }, // 0.5 s: lowest J of the thresholds tried (research/README.md section 8); headless mode 'aoi' (collect.py sets AOI_THR)
+  // literature baseline: error-triggered (age-of-incorrect-information style) update: sync when the LiDAR-verified mean twin
+  // error exceeds thrM (Maatouk et al., IEEE/ACM ToN 2020; event-triggered estimation, Trimpe & D'Andrea, IEEE TAC 2014). headless mode 'err' (ERR_THR)
+  ERRTRIG: { H: 5, thrM: 0.6 }, // the paper's held-out runs use thrM = 1.0 m (chosen by the constraint rule) and 6 m (collect.py sets ERR_THR)
+  // TwinTrust-AP pedestrian age floor (variant): sync V2P twin entries only when their mean age exceeds thrS (headless env PED_FLOOR=1)
+  PED_FLOOR: { on: false, thrS: 0.5 },
   // Joint beam adaptation: in the same cycle as the table's prediction/synchronisation action, switch the
   // beam (alternate path / relay for 2 s) when at least minBlock of the V2V links are blocked by buildings
   // and no switch is active. This makes the decision joint (horizon + sync + beam), as in the paper title.
@@ -2114,8 +2119,8 @@ function pushTelemetry(dt) {
 function losBlocked(x1, z1, x2, z2) { for (let k = 1; k < 10; k++) { const f = k / 10, x = x1 + (x2 - x1) * f, z = z1 + (z2 - z1) * f; if (Math.abs(near(x)) > 11 && Math.abs(near(z)) > 11) return true } return false }
 
 // edge synchronisation: the roadside/edge twin pushes a fresh state of every connected road user within 150 m
-function edgeSync() { let n = 0;
-  for (const e of allEntities()) { if (e.kind !== 'V2V' && e.kind !== 'V2P') continue; const tp = truePos(e); if (Math.hypot(tp.x - ego.x, tp.z - ego.z) > 150) continue;
+function edgeSync(only) { let n = 0;
+  for (const e of allEntities()) { if (e.kind !== 'V2V' && e.kind !== 'V2P') continue; if (only && e.kind !== only) continue; const tp = truePos(e); if (Math.hypot(tp.x - ego.x, tp.z - ego.z) > 150) continue;
     n++; if (Math.random() < .03 + (fault.loss ? .25 : 0)) continue;
     const lat = (12 + Math.random() * 8 + (fault.lat ? 280 + Math.random() * 80 : 0)) / 1000, sig = .3;
     queue.push({ id: e.id, kind: e.kind, ent: e, x: tp.x + gauss() * sig, z: tp.z + gauss() * sig, vx: tp.vx, vz: tp.vz, h: e.h, sigma: sig, tGen: t, at: t + lat, lat, sync: true }) }
@@ -2177,10 +2182,10 @@ function v2vChannel(e, tp) {
 
 // live evidence for her estimators, from the digital twin vs the ego's own LiDAR
 function ttapEvidence() {
-  const Ld = lidar(), C = TTAP_CFG; let errSum = 0, n = 0, ok = 0, nV = 0, okV = 0, errV = 0, ageSum = 0, an = 0, aList = [], blocked = 0, links = 0, relMax = 0, dens = 0, pred = 0;
+  const Ld = lidar(), C = TTAP_CFG; let errSum = 0, n = 0, ok = 0, nV = 0, okV = 0, errV = 0, ageSum = 0, an = 0, aList = [], blocked = 0, links = 0, relMax = 0, dens = 0, pred = 0, pAge = 0, pn = 0;
   const evx = Math.sin(ego.psi) * ego.v, evz = -Math.cos(ego.psi) * ego.v;
   for (const [id, o] of twinObjs) { const tw = twin.get(id); if (!tw || (tw.kind !== 'V2V' && tw.kind !== 'V2P')) continue; const ent = tw.ent; if (!ent) continue;
-    const d = Math.hypot(ent.x - ego.x, ent.z - ego.z); const age = t - tw.tGen; if (tw.src === 'v2x') { ageSum += age; an++; if (age > .15) pred++ }
+    const d = Math.hypot(ent.x - ego.x, ent.z - ego.z); const age = t - tw.tGen; if (tw.src === 'v2x') { ageSum += age; an++; if (age > .15) pred++; if (tw.kind === 'V2P') { pAge += age; pn++ } }
     if (tw.src === 'v2x' && tw.kind === 'V2V' && d < RANGE.V2V) { links++; const cl = chLinks.get(id); if ((cl && cl.state !== 'LOS') || (!cl && losBlocked(ego.x, ego.z, ent.x, ent.z)) || beamMisalign(id, ent) > BEAM.WIDTH / 2) blocked++ }
     if (d < 50) dens++;
     if (d < 60) { const rx = ent.x - ego.x, rz = ent.z - ego.z, rvx = (ent.vx || 0) - evx, rvz = (ent.vz || 0) - evz; const cl = -(rx * rvx + rz * rvz) / Math.max(1, d); if (cl > relMax) relMax = cl }
@@ -2202,7 +2207,7 @@ function ttapEvidence() {
   const u = ttap.errHist.length >= 2 ? clamp(TT.robustSpread(ttap.errHist) / C.E_REF, 0, 1) : (prev.u ?? 0);
   const a = an ? clamp(ageSum / an / C.AGE_REF, 0, 1) : (prev.a ?? 1);
   return { e, u, a, q, meanErr, verified: n, correct: n ? ok / n : null, correctV2V: nV ? okV / nV : null, meanErrV2V: nV ? errV / nV : null, A: aList.length ? TT.median(aList) : null,
-    cf: { rel: clamp(relMax / C.RELSPD_REF, 0, 1), block: links ? blocked / links : 0, age: a, chan: 1 - q, dens: clamp(dens / C.DENS_REF, 0, 1) }, predicted: pred, links, ageMean: an ? ageSum / an : null };
+    cf: { rel: clamp(relMax / C.RELSPD_REF, 0, 1), block: links ? blocked / links : 0, age: a, chan: 1 - q, dens: clamp(dens / C.DENS_REF, 0, 1) }, predicted: pred, links, ageMean: an ? ageSum / an : null, pedAgeMean: pn ? pAge / pn : null };
 }
 const sgm = x => 1 / (1 + Math.exp(-x));
 const calibrate = raw => sgm(TTAP_CFG.CAL.a * raw + TTAP_CFG.CAL.b);
@@ -2228,6 +2233,10 @@ function ttapStep() {
     const B = TTAP_CFG.AOI; ttap.H = B.H; ttap.predictOn = true; ttap.state = 'aoi';
     ttap.action = (ev.ageMean === null || ev.ageMean > B.thrS) ? 'synchronize' : 'predict';
     if (ttap.action === 'synchronize') { syncN = edgeSync(); beamSweep(); beam = 1 }
+  } else if (ttap.mode === 'err') {
+    const B = TTAP_CFG.ERRTRIG; ttap.H = B.H; ttap.predictOn = true; ttap.state = 'err';
+    ttap.action = (ev.meanErr !== null && ev.meanErr > B.thrM) ? 'synchronize' : 'predict';
+    if (ttap.action === 'synchronize') { syncN = edgeSync(); beamSweep(); beam = 1 }
   } else {
     const Tb = binOf(ttap.T, TTAP_CFG.TRUST_BINS), Cb = binOf(ttap.C, TTAP_CFG.CRIT_BINS); ttap.state = `${BINS[Tb]}/${BINS[Cb]}`;
     const act = ttapAction(Tb, Cb); ttap.action = act;
@@ -2236,6 +2245,7 @@ function ttapStep() {
     ttap.H = disc[clamp(base + ttap.hIdxOff, 0, disc.length - 1)];
     if (TTAP_CFG.AGE_FLOOR && ev.ageMean !== null) { const need = Math.ceil(ev.ageMean / 0.1 - 1e-9), f = disc.find(h => h >= need) ?? disc[disc.length - 1]; ttap.floored = ttap.H < f; if (ttap.floored) ttap.H = f } else ttap.floored = false;
     if (act === 'synchronize') syncN = edgeSync();
+    else if (TTAP_CFG.PED_FLOOR.on && ev.pedAgeMean !== null && ev.pedAgeMean > TTAP_CFG.PED_FLOOR.thrS) syncN = edgeSync('V2P');
     if (act === 'predict' || act === 'reduce_horizon' || act === 'increase_horizon') ttap.predictOn = true;
     else if (act === 'synchronize') ttap.predictOn = false;
     // age bridging: prediction stays on (a beam switch or sync must not leave the twin extrapolating only 0.2 s
