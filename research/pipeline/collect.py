@@ -8,6 +8,9 @@ usage: collect.py OUT.jsonl MODE [CAL_JSON] [POLICY_JSON] [SECONDS]
          aoi       : age-of-information threshold baseline (horizon 5, sync when mean age > AOI_THR s, env, default 0.5)
          err       : error-triggered baseline (horizon 5, sync when LiDAR-verified mean twin error > ERR_THR m, default 0.6)
   PED_FLOOR env: '1' adds the TwinTrust-AP pedestrian age floor (variant).
+  NO_CA env: '1' holds criticality and authority at 0.5 in the horizon rule (ablation).
+  BASE_RELAY env: '1' lets the fixed/AoI/error-triggered baselines' sweeps open the same alternate path (fairness check).
+  RELAY env: '0' disables the TwinTrust-AP alternate-path relay and joint beam switch (ablation).
   PRED env: twin motion predictor, 'gru' (default) or 'ctrv' (dead reckoning, for the ablation).
   FC_GHZ env: carrier frequency of the 3GPP V2V channel in GHz (default: the demo's 30 GHz).
   AGE_FLOOR, DT_BEAM env: '1' (default) or '0' to switch off the TwinTrust-AP horizon age floor or
@@ -38,11 +41,11 @@ async def run(out, mode, cal, pol, secs, conds):
             await pg.goto(PAGE, timeout=120000); await pg.wait_for_timeout(2500)
             recs = await pg.evaluate("""([mode,cal,pol,faults,spd,secs,aoiThr,pred,fc,flags])=>{const A=__aegis;A.TTAP_CFG.PRED=pred;A.TTAP_CFG.AGE_FLOOR=flags[0];A.TTAP_CFG.DT_BEAM=flags[1];if(fc)A.CH.FC=fc;window.__noRender=true;document.getElementById('start').hidden=true;
               if(cal)Object.assign(A.TTAP_CFG.CAL,cal);if(pol){A.TTAP_CFG.POLICY=pol.policy}
-              A.ttap.mode=(mode==='fixed'||mode==='aoi'||mode==='err')?mode:'twintrust';if(mode==='aoi')A.TTAP_CFG.AOI.thrS=aoiThr;if(mode==='err')A.TTAP_CFG.ERRTRIG.thrM=flags[3];A.TTAP_CFG.PED_FLOOR.on=flags[2];A.ttap.explore=mode==='explore';
+              A.ttap.mode=(mode==='fixed'||mode==='aoi'||mode==='err')?mode:'twintrust';if(mode==='aoi')A.TTAP_CFG.AOI.thrS=aoiThr;if(mode==='err')A.TTAP_CFG.ERRTRIG.thrM=flags[3];A.TTAP_CFG.PED_FLOOR.on=flags[2];A.TTAP_CFG.RELAY=flags[4];A.TTAP_CFG.BASE_RELAY=flags[5];A.TTAP_CFG.NO_CA=flags[6];A.ttap.relayUntil=0;A.ttap.explore=mode==='explore';
               A.fastForward(3,null);for(const f of faults)A.toggleFault(f);
               const auto=()=>{const k=A.keys,v=A.ego.v,c=A.crit;k.down=c.ttc<2.5&&v>2;k.up=!k.down&&v<spd};
               window.__ttapRecord=[];A.fastForward(secs,auto);const r=window.__ttapRecord;window.__ttapRecord=null;return r}""", [mode, cal, pol, faults, spd, secs, float(os.environ.get('AOI_THR', '0.5')), os.environ.get('PRED', 'gru'), float(os.environ.get('FC_GHZ', '0')),
-                 [os.environ.get('AGE_FLOOR', '1') == '1', os.environ.get('DT_BEAM', '1') == '1', os.environ.get('PED_FLOOR', '0') == '1', float(os.environ.get('ERR_THR', '0.6'))]])
+                 [os.environ.get('AGE_FLOOR', '1') == '1', os.environ.get('DT_BEAM', '1') == '1', os.environ.get('PED_FLOOR', '0') == '1', float(os.environ.get('ERR_THR', '0.6')), os.environ.get('RELAY', '1') == '1', os.environ.get('BASE_RELAY', '0') == '1', os.environ.get('NO_CA', '0') == '1']])
             for i, r in enumerate(recs):
                 r['cond'] = name; r['i'] = i; f.write(json.dumps(r) + '\n')
             summary.append((name, len(recs), errs[:1])); await ctx.close()
